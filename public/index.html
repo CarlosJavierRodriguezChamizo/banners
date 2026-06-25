@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banners Generator</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Banners Generator</h1>
+    <button id="generate-btn" class="primary" disabled>Generar ZIP</button>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>1. Marca</h2>
+        <select id="brand-select"></select>
+      </section>
+
+      <section class="card">
+        <h2>2. Copy</h2>
+        <label>Titular
+          <textarea id="copy" rows="3" placeholder="Tu baño no se va a reformar solo, confía en los expertos"></textarea>
+          <span class="hint">Escríbelo de corrido. Los saltos de línea se calculan automáticamente según el espacio disponible en cada formato.</span>
+        </label>
+        <label>Subtítulo (opcional)
+          <textarea id="subcopy" rows="2" placeholder=""></textarea>
+        </label>
+        <label>CTA
+          <input id="cta" type="text" placeholder="Quiero reformar mi baño">
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>3. Imagen</h2>
+        <input id="image-input" type="file" accept="image/*">
+        <div id="image-status" class="hint">Sube una imagen (JPG/PNG).</div>
+      </section>
+
+      <section class="card">
+        <h2>4. Ajustes globales</h2>
+        <label class="row">
+          <input id="veil-all" type="checkbox">
+          <span>Aplicar velo a todos por defecto</span>
+        </label>
+        <button id="reset-focal" class="secondary">Resetear focal points a 50/50</button>
+      </section>
+    </aside>
+
+    <section class="grid" id="format-grid"></section>
+  </main>
+
+  <div id="overlay" hidden>
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p id="overlay-msg">Generando banners…</p>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

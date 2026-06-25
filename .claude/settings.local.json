@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/**)",
+      "Read(//Users/carlosjavierrodriguezchamizo/.nvm/versions/node/**)",
+      "Bash(~/.nvm/versions/node/v24.14.0/bin/node --version)",
+      "Bash(~/.nvm/versions/node/v24.14.0/bin/npm --version)",
+      "Bash(curl -s http://localhost:3700/api/catalog)",
+      "Read(//private/tmp/**)",
+      "Bash(~/.nvm/versions/node/v24.14.0/bin/node -e ' *)",
+      "Read(//tmp/**)",
+      "Bash(kill %1)",
+      "Bash(lsof -ti:3700)",
+      "Bash(xargs kill -9)",
+      "Bash(curl -s -X POST -H 'Content-Type: application/json' -d '{\"brandId\":\"todo-muebles\",\"copy\":\"Tu baño\\\\nmerece estar\\\\nen Pinterest\",\"subcopy\":\"Pídelo hoy y\\\\nestrénalo ya\",\"cta\":\"Ver muebles de baño\",\"imageUrl\":\"/uploads/e3ed64efad93c3f5.jpg\",\"perFormat\":{\"google-1200x628\":{\"focalX\":80,\"focalY\":50,\"veil\":true}}}' -o /tmp/banners-todo.zip http://localhost:3700/api/generate)",
+      "Bash(rm -rf /tmp/todo-check)",
+      "Bash(mkdir /tmp/todo-check)",
+      "Bash(unzip -q /tmp/banners-todo.zip)",
+      "Bash(rm -f /tmp/test-banner.jpg /tmp/banners-test*.zip /tmp/banners-solo.zip /tmp/banners-todo.zip)",
+      "Bash(rm -rf /tmp/banners-check /tmp/banners-check2 /tmp/solo-check /tmp/todo-check)",
+      "Bash(rm -f /tmp/test-banner.jpg /tmp/deco.zip /tmp/solo.zip /tmp/todo.zip)",
+      "Bash(rm -rf /tmp/d /tmp/s /tmp/t)",
+      "Bash(rm -f /Users/carlosjavierrodriguezchamizo/Desktop/DEV/banners/uploads/*.jpg)",
+      "Bash(rm -f /tmp/test-banner.jpg /tmp/deco*.zip /tmp/solo*.zip /tmp/todo*.zip)",
+      "Bash(rm -rf /tmp/d /tmp/s /tmp/t /tmp/d2 /tmp/s2 /tmp/t2 /tmp/d3 /tmp/s3 /tmp/t3 /tmp/s4 /tmp/s5 /tmp/s6 /tmp/s7)",
+      "Bash(rm -f /tmp/test-banner.jpg /tmp/deco.zip /tmp/solo.zip /tmp/solo2.zip /tmp/todo.zip)",
+      "Bash(rm -rf /tmp/d /tmp/s /tmp/s2 /tmp/t)",
+      "Bash(rm -f /tmp/test-banner.jpg /tmp/deco.zip)",
+      "Bash(rm -rf /tmp/d)",
+      "Bash(mkdir -p /Users/carlosjavierrodriguezchamizo/Desktop/DEV/banners/public/patterns *)"
+    ]
+  }
+}
