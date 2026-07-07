@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>blu — Tu dinero, a tu bola</title>
+<meta name="description" content="Cuenta, tarjeta e inversión desde 1 €. Sin comisiones, sin letra pequeña, sin dramas. blu es el banco que habla tu idioma.">
+<style>
+  /* ============ Fuentes (Sora, ya incluida en el repo) ============ */
+  @font-face { font-family:'Sora'; src:url('../fonts/sora/Sora-Regular.ttf') format('truetype'); font-weight:400; font-display:swap; }
+  @font-face { font-family:'Sora'; src:url('../fonts/sora/Sora-Medium.ttf') format('truetype'); font-weight:500; font-display:swap; }
+  @font-face { font-family:'Sora'; src:url('../fonts/sora/Sora-SemiBold.ttf') format('truetype'); font-weight:600; font-display:swap; }
+  @font-face { font-family:'Sora'; src:url('../fonts/sora/Sora-Bold.ttf') format('truetype'); font-weight:700; font-display:swap; }
+  @font-face { font-family:'Sora'; src:url('../fonts/sora/Sora-ExtraBold.ttf') format('truetype'); font-weight:800; font-display:swap; }
+
+  /* ============ Design tokens ============
+     Navy + azul corporativo → BBVA
+     Negro tinta, grises fríos y tipografía XXL → Trade Republic
+     Aqua eléctrico → acento compartido, subido de saturación para Gen Z */
+  :root{
+    --navy:#072146;
+    --navy-2:#0A2E5C;
+    --blue:#004481;
+    --aqua:#2DCCCD;
+    --aqua-bright:#49E3E3;
+    --sky:#5BBEFF;
+    --lime:#D8F34F;
+    --ink:#0B0E14;
+    --ink-2:#14181F;
+    --paper:#FFFFFF;
+    --mist:#F4F6F9;
+    --line:#E4E9F0;
+    --text:#0B0E14;
+    --text-soft:#5A6675;
+    --text-inverse:#F5F8FC;
+    --text-inverse-soft:#93A3B8;
+    --radius:20px;
+    --radius-lg:28px;
+    --font:'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family:var(--font);
+    color:var(--text);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+  img,svg{ display:block; max-width:100%; }
+  .wrap{ width:min(1180px, 92vw); margin-inline:auto; }
+
+  ::selection{ background:var(--aqua); color:var(--navy); }
+
+  /* ============ Reveal on scroll ============ */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s cubic-bezier(.22,.8,.32,1); }
+  .reveal.is-in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+    html{ scroll-behavior:auto; }
+  }
+
+  /* ============ Header ============ */
+  .header{
+    position:fixed; inset:0 0 auto 0; z-index:50;
+    transition:background .3s ease, box-shadow .3s ease;
+  }
+  .header.is-solid{
+    background:rgba(7,33,70,.88);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 1px 0 rgba(255,255,255,.08);
+  }
+  .header__in{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block:18px;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-weight:800; font-size:1.45rem; letter-spacing:-.03em;
+    color:var(--text-inverse);
+  }
+  .logo__dot{
+    width:14px; height:14px; border-radius:50%;
+    background:linear-gradient(135deg, var(--aqua-bright), var(--sky));
+    box-shadow:0 0 18px rgba(73,227,227,.7);
+  }
+  .nav{ display:flex; gap:34px; font-size:.92rem; font-weight:500; color:var(--text-inverse-soft); }
+  .nav a{ transition:color .2s; }
+  .nav a:hover{ color:var(--aqua-bright); }
+  .header__cta{ display:flex; align-items:center; gap:14px; }
+  .header__login{ font-size:.92rem; font-weight:600; color:var(--text-inverse); }
+  .header__login:hover{ color:var(--aqua-bright); }
+
+  /* ============ Botones ============ */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    font-family:var(--font); font-weight:700; font-size:1rem;
+    padding:16px 30px; border-radius:999px; border:0; cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn--primary{
+    background:var(--aqua); color:var(--navy);
+    box-shadow:0 10px 30px rgba(45,204,205,.35);
+  }
+  .btn--primary:hover{ background:var(--aqua-bright); transform:translateY(-2px); box-shadow:0 16px 40px rgba(45,204,205,.45); }
+  .btn--ghost{
+    background:transparent; color:var(--text-inverse);
+    box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35);
+  }
+  .btn--ghost:hover{ box-shadow:inset 0 0 0 1.5px var(--aqua-bright); color:var(--aqua-bright); }
+  .btn--navy{
+    background:var(--navy); color:#fff;
+    box-shadow:0 10px 30px rgba(7,33,70,.25);
+  }
+  .btn--navy:hover{ background:var(--blue); transform:translateY(-2px); }
+  .btn--sm{ padding:11px 22px; font-size:.9rem; }
+
+  /* ============ Hero ============ */
+  .hero{
+    position:relative; color:var(--text-inverse);
+    background:
+      radial-gradient(1100px 700px at 85% -10%, rgba(0,68,129,.85), transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, rgba(45,204,205,.22), transparent 55%),
+      linear-gradient(165deg, var(--navy) 0%, #051834 55%, var(--ink) 100%);
+    padding:170px 0 0;
+    overflow:hidden;
+  }
+  .hero__grid{
+    display:grid; grid-template-columns:1.05fr .95fr; gap:48px; align-items:center;
+    padding-bottom:90px;
+  }
+  .hero__badge{
+    display:inline-flex; align-items:center; gap:9px;
+    font-size:.82rem; font-weight:600; letter-spacing:.02em;
+    color:var(--aqua-bright);
+    background:rgba(45,204,205,.12);
+    border:1px solid rgba(45,204,205,.35);
+    padding:8px 16px; border-radius:999px; margin-bottom:26px;
+  }
+  .hero__badge .pulse{
+    width:8px; height:8px; border-radius:50%; background:var(--aqua-bright);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(73,227,227,.6); }
+    70%{ box-shadow:0 0 0 9px rgba(73,227,227,0); }
+    100%{ box-shadow:0 0 0 0 rgba(73,227,227,0); }
+  }
+  .hero h1{
+    font-size:clamp(2.7rem, 5.6vw, 4.6rem);
+    font-weight:800; line-height:1.04; letter-spacing:-.035em;
+    margin-bottom:24px;
+  }
+  .hero h1 .glow{
+    background:linear-gradient(92deg, var(--aqua-bright), var(--sky));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero__sub{
+    font-size:1.15rem; line-height:1.65; color:var(--text-inverse-soft);
+    max-width:34rem; margin-bottom:36px;
+  }
+  .hero__sub strong{ color:var(--text-inverse); font-weight:600; }
+  .hero__actions{ display:flex; flex-wrap:wrap; gap:16px; margin-bottom:34px; }
+  .hero__legal{ font-size:.78rem; color:var(--text-inverse-soft); opacity:.75; max-width:30rem; line-height:1.5; }
+
+  /* --- Phone mockup (CSS puro) --- */
+  .phone-zone{ position:relative; display:flex; justify-content:center; }
+  .phone{
+    position:relative; width:320px; border-radius:46px;
+    background:#0D1017;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 10px rgba(255,255,255,.03);
+    padding:14px; z-index:2;
+    transform:rotate(-2deg);
+  }
+  .phone__screen{
+    border-radius:34px; overflow:hidden;
+    background:linear-gradient(180deg, #10141C 0%, #0B0E14 100%);
+    padding:22px 20px 26px;
+  }
+  .phone__notch{
+    width:110px; height:26px; border-radius:999px; background:#000;
+    margin:0 auto 20px;
+  }
+  .phone__hello{ font-size:.8rem; color:var(--text-inverse-soft); margin-bottom:4px; }
+  .phone__balance{
+    font-size:2.1rem; font-weight:800; letter-spacing:-.03em; color:#fff;
+    display:flex; align-items:baseline; gap:8px;
+  }
+  .phone__delta{
+    font-size:.78rem; font-weight:700; color:var(--aqua-bright);
+    background:rgba(45,204,205,.14); padding:3px 9px; border-radius:999px;
+  }
+  .phone__chart{ margin:18px -4px 14px; }
+  .phone__row{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 12px; border-radius:16px; background:rgba(255,255,255,.045);
+    margin-bottom:9px;
+  }
+  .phone__ico{
+    width:38px; height:38px; border-radius:12px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.05rem;
+  }
+  .phone__ico--a{ background:rgba(45,204,205,.16); }
+  .phone__ico--b{ background:rgba(91,190,255,.16); }
+  .phone__ico--c{ background:rgba(216,243,79,.14); }
+  .phone__meta{ flex:1; min-width:0; }
+  .phone__meta b{ display:block; font-size:.84rem; color:#fff; font-weight:600; }
+  .phone__meta span{ font-size:.72rem; color:var(--text-inverse-soft); }
+  .phone__amt{ font-size:.86rem; font-weight:700; color:#fff; }
+  .phone__amt.pos{ color:var(--aqua-bright); }
+
+  .float-card{
+    position:absolute; z-index:3;
+    background:rgba(255,255,255,.97); color:var(--navy);
+    border-radius:18px; padding:14px 18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.4);
+    font-size:.82rem; font-weight:600;
+    animation:floaty 5s ease-in-out infinite;
+  }
+  .float-card b{ display:block; font-size:1.15rem; font-weight:800; letter-spacing:-.02em; }
+  .float-card--tae{ top:12%; right:2%; animation-delay:.6s; }
+  .float-card--cash{ bottom:14%; left:0; }
+  .float-card--cash b{ color:#0AA5A6; }
+  @keyframes floaty{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-12px); }
+  }
+
+  /* --- Marquee --- */
+  .marquee{
+    border-top:1px solid rgba(255,255,255,.09);
+    background:rgba(255,255,255,.03);
+    overflow:hidden; padding:16px 0;
+    -webkit-mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee__track{
+    display:flex; gap:56px; width:max-content;
+    animation:scroll 30s linear infinite;
+    font-size:.88rem; font-weight:600; color:var(--text-inverse-soft);
+    white-space:nowrap;
+  }
+  .marquee__track em{ color:var(--aqua-bright); font-style:normal; margin-right:8px; }
+  @keyframes scroll{ to{ transform:translateX(-50%); } }
+
+  /* ============ Secciones genéricas ============ */
+  section{ padding:110px 0; }
+  .kicker{
+    display:inline-block; font-size:.8rem; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--blue); margin-bottom:16px;
+  }
+  .dark .kicker, .trust .kicker{ color:var(--aqua-bright); }
+  h2{
+    font-size:clamp(2rem, 4vw, 3.1rem);
+    font-weight:800; letter-spacing:-.03em; line-height:1.08;
+  }
+  .sec-head{ max-width:44rem; margin-bottom:64px; }
+  .sec-head p{ margin-top:18px; font-size:1.08rem; line-height:1.65; color:var(--text-soft); }
+
+  /* ============ Stats ============ */
+  .stats{ padding:70px 0; border-bottom:1px solid var(--line); }
+  .stats__grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; }
+  .stat b{
+    display:block; font-size:clamp(2.2rem, 4vw, 3.2rem);
+    font-weight:800; letter-spacing:-.04em; color:var(--navy);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat b .unit{ font-size:.55em; font-weight:700; color:var(--aqua); margin-left:2px; }
+  .stat span{ font-size:.92rem; color:var(--text-soft); }
+
+  /* ============ Features ============ */
+  .features{ background:var(--mist); }
+  .cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:22px; }
+  .card{
+    background:var(--paper); border-radius:var(--radius-lg);
+    padding:34px 28px; border:1px solid var(--line);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .card:hover{ transform:translateY(-6px); box-shadow:0 24px 50px rgba(7,33,70,.1); }
+  .card__ico{
+    width:54px; height:54px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:22px;
+  }
+  .card__ico svg{ width:26px; height:26px; }
+  .card__ico--aqua{ background:rgba(45,204,205,.14); color:#0AA5A6; }
+  .card__ico--blue{ background:rgba(0,68,129,.1); color:var(--blue); }
+  .card__ico--navy{ background:rgba(7,33,70,.08); color:var(--navy); }
+  .card__ico--lime{ background:rgba(216,243,79,.35); color:#5F7010; }
+  .card h3{ font-size:1.18rem; font-weight:700; letter-spacing:-.02em; margin-bottom:12px; }
+  .card p{ font-size:.94rem; line-height:1.6; color:var(--text-soft); }
+
+  /* ============ Interés (estilo Trade Republic: cifra XXL) ============ */
+  .dark{
+    background:
+      radial-gradient(900px 500px at 110% 10%, rgba(0,68,129,.5), transparent 60%),
+      linear-gradient(180deg, var(--ink) 0%, #0A1626 100%);
+    color:var(--text-inverse);
+  }
+  .interest__grid{ display:grid; grid-template-columns:1.1fr .9fr; gap:64px; align-items:center; }
+  .bignum{
+    font-size:clamp(6rem, 14vw, 11.5rem);
+    font-weight:800; line-height:.95; letter-spacing:-.05em;
+    background:linear-gradient(180deg, #fff 30%, var(--aqua-bright));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .bignum small{ font-size:.35em; font-weight:700; letter-spacing:-.02em; }
+  .interest h2{ margin:8px 0 20px; }
+  .interest p{ color:var(--text-inverse-soft); font-size:1.05rem; line-height:1.7; max-width:30rem; }
+  .interest__points{ margin:30px 0 38px; display:grid; gap:14px; }
+  .interest__points li{
+    display:flex; gap:14px; align-items:flex-start;
+    font-size:.98rem; color:var(--text-inverse);
+  }
+  .check{
+    flex:none; width:22px; height:22px; border-radius:50%;
+    background:rgba(45,204,205,.16); color:var(--aqua-bright);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.72rem; font-weight:800; margin-top:1px;
+  }
+
+  /* ============ Inversión (lista tipo broker) ============ */
+  .invest__grid{ display:grid; grid-template-columns:.9fr 1.1fr; gap:64px; align-items:center; }
+  .ticker-panel{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:0 30px 70px rgba(7,33,70,.12);
+    padding:14px; overflow:hidden;
+  }
+  .ticker{
+    display:flex; align-items:center; gap:16px;
+    padding:16px 14px; border-radius:16px;
+    transition:background .2s;
+  }
+  .ticker:hover{ background:var(--mist); }
+  .ticker + .ticker{ border-top:1px solid var(--line); }
+  .ticker__logo{
+    width:44px; height:44px; border-radius:14px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:.8rem; color:#fff;
+  }
+  .ticker__meta{ flex:1; }
+  .ticker__meta b{ display:block; font-size:.98rem; font-weight:700; }
+  .ticker__meta span{ font-size:.8rem; color:var(--text-soft); }
+  .ticker__spark{ width:88px; flex:none; }
+  .ticker__val{ text-align:right; flex:none; min-width:86px; }
+  .ticker__val b{ display:block; font-size:.95rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .ticker__val span{ font-size:.8rem; font-weight:700; }
+  .up{ color:#0AA5A6; } .down{ color:#E5484D; }
+  .invest__cta{ margin-top:36px; display:flex; gap:16px; flex-wrap:wrap; }
+  .invest p.lead{ margin-top:18px; font-size:1.08rem; line-height:1.65; color:var(--text-soft); }
+
+  /* ============ Seguridad (confianza BBVA) ============ */
+  .trust{ background:var(--navy); color:var(--text-inverse); }
+  .trust__grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; margin-top:60px; }
+  .trust__item{
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    border-radius:var(--radius-lg); padding:34px 30px;
+  }
+  .trust__item .card__ico{ background:rgba(45,204,205,.14); color:var(--aqua-bright); }
+  .trust__item h3{ font-size:1.15rem; font-weight:700; margin-bottom:12px; }
+  .trust__item p{ font-size:.94rem; line-height:1.65; color:var(--text-inverse-soft); }
+
+  /* ============ FAQ ============ */
+  .faq{ background:var(--mist); }
+  .faq__list{ max-width:760px; }
+  .faq__item{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:var(--radius); margin-bottom:14px; overflow:hidden;
+  }
+  .faq__item summary{
+    list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:20px;
+    padding:24px 28px; font-weight:700; font-size:1.02rem; letter-spacing:-.01em;
+  }
+  .faq__item summary::-webkit-details-marker{ display:none; }
+  .faq__item summary::after{
+    content:'+'; font-size:1.5rem; font-weight:400; color:var(--blue);
+    transition:transform .25s; flex:none; line-height:1;
+  }
+  .faq__item[open] summary::after{ transform:rotate(45deg); }
+  .faq__item p{
+    padding:0 28px 26px; font-size:.95rem; line-height:1.7; color:var(--text-soft);
+  }
+
+  /* ============ CTA final ============ */
+  .final{
+    background:
+      radial-gradient(800px 500px at 50% 130%, rgba(45,204,205,.3), transparent 60%),
+      linear-gradient(180deg, var(--navy), #051429);
+    color:var(--text-inverse); text-align:center;
+  }
+  .final h2{ font-size:clamp(2.4rem, 5vw, 4rem); max-width:20ch; margin:0 auto 22px; }
+  .final p{ color:var(--text-inverse-soft); font-size:1.1rem; max-width:36rem; margin:0 auto 42px; line-height:1.65; }
+  .final__actions{ display:flex; justify-content:center; gap:16px; flex-wrap:wrap; }
+  .final__stores{ margin-top:30px; font-size:.82rem; color:var(--text-inverse-soft); }
+
+  /* ============ Footer ============ */
+  .footer{ background:var(--ink); color:var(--text-inverse-soft); padding:70px 0 40px; font-size:.86rem; }
+  .footer__grid{
+    display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px;
+    padding-bottom:48px; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .footer .logo{ margin-bottom:16px; font-size:1.25rem; }
+  .footer h4{ color:#fff; font-size:.9rem; font-weight:700; margin-bottom:18px; }
+  .footer li{ margin-bottom:11px; }
+  .footer a:hover{ color:var(--aqua-bright); }
+  .footer__legal{ padding-top:34px; font-size:.76rem; line-height:1.7; opacity:.7; }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 980px){
+    .nav{ display:none; }
+    .hero__grid, .interest__grid, .invest__grid{ grid-template-columns:1fr; }
+    .invest__grid .ticker-panel{ order:2; }
+    .stats__grid{ grid-template-columns:repeat(2,1fr); gap:40px 24px; }
+    .cards{ grid-template-columns:repeat(2,1fr); }
+    .trust__grid{ grid-template-columns:1fr; }
+    .footer__grid{ grid-template-columns:1fr 1fr; }
+    .phone-zone{ margin-top:20px; }
+    .float-card--cash{ left:4%; }
+    section{ padding:80px 0; }
+  }
+  @media (max-width: 560px){
+    .cards{ grid-template-columns:1fr; }
+    .btn{ width:100%; }
+    .hero__actions .btn, .final__actions .btn, .invest__cta .btn{ width:auto; flex:1; min-width:200px; }
+    .phone{ width:280px; }
+    .header__login{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="header" id="header">
+  <div class="wrap header__in">
+    <a class="logo" href="#"><span class="logo__dot"></span>blu</a>
+    <nav class="nav">
+      <a href="#cuenta">Cuenta</a>
+      <a href="#interes">Interés</a>
+      <a href="#invertir">Invertir</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="header__cta">
+      <a class="header__login" href="#">Iniciar sesión</a>
+      <a class="btn btn--primary btn--sm" href="#descarga">Descarga la app</a>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="wrap hero__grid">
+    <div>
+      <span class="hero__badge"><span class="pulse"></span> Nuevo · 2,3&nbsp;% TAE en tu cuenta</span>
+      <h1>Tu dinero,<br>a tu bola.<br><span class="glow">Sin dramas.</span></h1>
+      <p class="hero__sub">Cuenta, tarjeta e inversión <strong>desde 1&nbsp;€</strong>. Sin comisiones, sin letra pequeña y sin ir a ninguna oficina. Te abres la cuenta en <strong>5 minutos</strong> desde el sofá.</p>
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="#descarga">Empieza gratis
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn--ghost" href="#cuenta">Ver cómo funciona</a>
+      </div>
+      <p class="hero__legal">blu es una entidad de pago autorizada y supervisada por el Banco de España. Tu dinero está protegido hasta 100.000&nbsp;€ por el Fondo de Garantía de Depósitos.</p>
+    </div>
+
+    <div class="phone-zone reveal">
+      <div class="float-card float-card--tae">Interés anual<br><b>2,3&nbsp;% TAE</b></div>
+      <div class="float-card float-card--cash">Cashback este mes<br><b>+&nbsp;12,40&nbsp;€</b></div>
+      <div class="phone">
+        <div class="phone__screen">
+          <div class="phone__notch"></div>
+          <p class="phone__hello">Hola, Lucía 👋</p>
+          <div class="phone__balance">1.248,32&nbsp;€ <span class="phone__delta">▲ 4,2&nbsp;%</span></div>
+          <svg class="phone__chart" viewBox="0 0 280 70" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#49E3E3" stop-opacity=".35"/>
+                <stop offset="100%" stop-color="#49E3E3" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 55 C25 50 35 58 55 48 S90 30 115 36 S150 20 175 24 S215 10 240 14 S265 6 280 8 V70 H0 Z" fill="url(#chartFill)"/>
+            <path d="M0 55 C25 50 35 58 55 48 S90 30 115 36 S150 20 175 24 S215 10 240 14 S265 6 280 8" stroke="#49E3E3" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <div class="phone__row">
+            <div class="phone__ico phone__ico--a">🎧</div>
+            <div class="phone__meta"><b>Spotify</b><span>Suscripción · hoy</span></div>
+            <span class="phone__amt">−10,99&nbsp;€</span>
+          </div>
+          <div class="phone__row">
+            <div class="phone__ico phone__ico--b">💸</div>
+            <div class="phone__meta"><b>Bizum de Marta</b><span>«la cena 🍕» · ayer</span></div>
+            <span class="phone__amt pos">+18,50&nbsp;€</span>
+          </div>
+          <div class="phone__row">
+            <div class="phone__ico phone__ico--c">📈</div>
+            <div class="phone__meta"><b>Plan de inversión</b><span>Aportación semanal</span></div>
+            <span class="phone__amt">−25,00&nbsp;€</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span><em>0&nbsp;€</em> comisiones de mantenimiento</span>
+      <span><em>2,3&nbsp;%</em> TAE en tu saldo</span>
+      <span><em>1&nbsp;€</em> para empezar a invertir</span>
+      <span><em>3&nbsp;%</em> cashback en tus marcas</span>
+      <span><em>5&nbsp;min</em> para abrir tu cuenta</span>
+      <span><em>0&nbsp;€</em> comisiones de mantenimiento</span>
+      <span><em>2,3&nbsp;%</em> TAE en tu saldo</span>
+      <span><em>1&nbsp;€</em> para empezar a invertir</span>
+      <span><em>3&nbsp;%</em> cashback en tus marcas</span>
+      <span><em>5&nbsp;min</em> para abrir tu cuenta</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section class="stats" aria-label="blu en cifras">
+  <div class="wrap stats__grid">
+    <div class="stat reveal"><b><span class="count" data-to="2" data-decimals="1">0</span><span class="unit">M</span></b><span>personas ya usan blu</span></div>
+    <div class="stat reveal"><b><span class="count" data-to="0">0</span><span class="unit">€</span></b><span>comisiones de mantenimiento</span></div>
+    <div class="stat reveal"><b><span class="count" data-to="4" data-decimals="1">0</span><span class="unit">★</span></b><span>valoración media en las stores</span></div>
+    <div class="stat reveal"><b><span class="count" data-to="100" data-suffix="k">0</span><span class="unit">€</span></b><span>de tu dinero protegido por el FGD</span></div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="features" id="cuenta">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Todo en una app</span>
+      <h2>Un banco que no parece un banco</h2>
+      <p>Lo que necesitas para tu día a día, sin las cosas que odias de los bancos de siempre. Diseñado para gastar, ahorrar e invertir sin complicarte.</p>
+    </div>
+    <div class="cards">
+      <article class="card reveal">
+        <div class="card__ico card__ico--aqua">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+        </div>
+        <h3>Cuenta y tarjeta gratis</h3>
+        <p>Cuenta con IBAN español y tarjeta física + virtual sin cuota. Paga con el móvil, retira en cajeros y olvídate de comisiones de mantenimiento. Para siempre.</p>
+      </article>
+      <article class="card reveal">
+        <div class="card__ico card__ico--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+        </div>
+        <h3>Invierte desde 1&nbsp;€</h3>
+        <p>Acciones, ETFs y planes de inversión automáticos con fracciones. Programa una aportación semanal y deja que el interés compuesto haga su magia.</p>
+      </article>
+      <article class="card reveal">
+        <div class="card__ico card__ico--lime">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 1.8 2.6 5 3.2 5 1.4 5 3.3-2.2 3-5 3-5-1.1-5-3"/></svg>
+        </div>
+        <h3>Cashback real</h3>
+        <p>Hasta un 3&nbsp;% de vuelta en las marcas donde ya compras: transporte, streaming, moda y delivery. Dinero de verdad en tu cuenta, no puntos raros.</p>
+      </article>
+      <article class="card reveal">
+        <div class="card__ico card__ico--navy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </div>
+        <h3>Apartados y metas</h3>
+        <p>Crea huchas para el festival, el viaje o la fianza del piso. Redondea tus compras y ahorra sin darte cuenta. Tú pones la meta, blu hace el resto.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INTERÉS ================= -->
+<section class="dark interest" id="interes">
+  <div class="wrap interest__grid">
+    <div class="reveal">
+      <span class="kicker">Tu saldo trabaja</span>
+      <div class="bignum">2,3<small>%&nbsp;TAE</small></div>
+    </div>
+    <div class="reveal">
+      <h2>Tu dinero crece mientras duermes</h2>
+      <p>Sin hacer nada. El saldo de tu cuenta genera un 2,3&nbsp;% TAE desde el primer euro, con pago de intereses cada mes.</p>
+      <ul class="interest__points">
+        <li><span class="check">✓</span> Desde el primer euro, sin saldo mínimo ni nómina</li>
+        <li><span class="check">✓</span> Intereses abonados cada mes, automáticamente</li>
+        <li><span class="check">✓</span> Tu dinero siempre disponible: sácalo cuando quieras</li>
+        <li><span class="check">✓</span> Sin permanencia, sin condiciones, sin asteriscos</li>
+      </ul>
+      <a class="btn btn--primary" href="#descarga">Quiero ese 2,3&nbsp;%</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= INVERSIÓN ================= -->
+<section class="invest" id="invertir">
+  <div class="wrap invest__grid">
+    <div class="ticker-panel reveal" aria-label="Ejemplo de inversiones en la app">
+      <div class="ticker">
+        <div class="ticker__logo" style="background:#072146">SP</div>
+        <div class="ticker__meta"><b>MSCI World ETF</b><span>Plan automático · 25&nbsp;€/semana</span></div>
+        <svg class="ticker__spark" viewBox="0 0 88 32" fill="none" aria-hidden="true"><path d="M2 26 L14 22 L26 24 L38 16 L50 18 L62 10 L74 12 L86 5" stroke="#0AA5A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="ticker__val"><b>1.412,08&nbsp;€</b><span class="up">+8,4&nbsp;%</span></div>
+      </div>
+      <div class="ticker">
+        <div class="ticker__logo" style="background:#004481">TQ</div>
+        <div class="ticker__meta"><b>Tech Global</b><span>Acciones fraccionadas</span></div>
+        <svg class="ticker__spark" viewBox="0 0 88 32" fill="none" aria-hidden="true"><path d="M2 20 L14 24 L26 18 L38 20 L50 12 L62 15 L74 8 L86 10" stroke="#0AA5A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="ticker__val"><b>326,50&nbsp;€</b><span class="up">+3,1&nbsp;%</span></div>
+      </div>
+      <div class="ticker">
+        <div class="ticker__logo" style="background:#0AA5A6">GR</div>
+        <div class="ticker__meta"><b>Energía verde</b><span>ETF temático</span></div>
+        <svg class="ticker__spark" viewBox="0 0 88 32" fill="none" aria-hidden="true"><path d="M2 12 L14 15 L26 10 L38 18 L50 14 L62 22 L74 18 L86 21" stroke="#E5484D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="ticker__val"><b>98,74&nbsp;€</b><span class="down">−1,2&nbsp;%</span></div>
+      </div>
+      <div class="ticker">
+        <div class="ticker__logo" style="background:#5BBEFF">S&amp;P</div>
+        <div class="ticker__meta"><b>S&amp;P 500 ETF</b><span>Plan automático · 10&nbsp;€/semana</span></div>
+        <svg class="ticker__spark" viewBox="0 0 88 32" fill="none" aria-hidden="true"><path d="M2 24 L14 20 L26 21 L38 14 L50 16 L62 9 L74 11 L86 4" stroke="#0AA5A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="ticker__val"><b>842,19&nbsp;€</b><span class="up">+11,6&nbsp;%</span></div>
+      </div>
+    </div>
+    <div class="reveal">
+      <span class="kicker">Inversión sin postureo</span>
+      <h2>Invertir no es solo de gente con corbata</h2>
+      <p class="lead">Empieza con lo que te sobra del finde: desde 1&nbsp;€ y con 0&nbsp;€ de comisión de custodia. Planes automáticos, acciones fraccionadas y más de 2.600 ETFs explicados en un idioma que entiendes.</p>
+      <p class="lead">Nada de jerga. Cada producto te dice qué es, qué riesgo tiene y qué te cuesta. Aprende mientras inviertes con blu&nbsp;Academy, gratis en la app.</p>
+      <div class="invest__cta">
+        <a class="btn btn--navy" href="#descarga">Empieza con 1&nbsp;€</a>
+        <a class="btn btn--ghost" style="color:var(--navy); box-shadow:inset 0 0 0 1.5px var(--line);" href="#faq">¿Y el riesgo?</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SEGURIDAD ================= -->
+<section class="trust" id="seguridad">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Tranqui, está controlado</span>
+      <h2>Serio por dentro,<br>fácil por fuera</h2>
+    </div>
+    <div class="trust__grid">
+      <article class="trust__item reveal">
+        <div class="card__ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h3>Regulados y supervisados</h3>
+        <p>Operamos con licencia bancaria europea, bajo la supervisión del Banco de España y la CNMV. Lo aburrido de un banco de toda la vida, sin lo aburrido.</p>
+      </article>
+      <article class="trust__item reveal">
+        <div class="card__ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+        </div>
+        <h3>Tu dinero, protegido</h3>
+        <p>Depósitos garantizados hasta 100.000&nbsp;€ por el Fondo de Garantía de Depósitos. Tus inversiones, custodiadas en entidades de primer nivel.</p>
+      </article>
+      <article class="trust__item reveal">
+        <div class="card__ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 109 9"/><path d="M12 8v4l2.5 2.5"/><path d="M19 3l2 2-2 2"/></svg>
+        </div>
+        <h3>Control total desde la app</h3>
+        <p>Bloquea la tarjeta en un toque, genera tarjetas virtuales de un solo uso y recibe una notificación de cada movimiento al instante. Tú mandas.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="kicker">Dudas rápidas</span>
+      <h2>Lo que todo el mundo pregunta</h2>
+    </div>
+    <div class="faq__list reveal">
+      <details class="faq__item">
+        <summary>¿De verdad no hay ninguna comisión?</summary>
+        <p>De verdad. Ni de apertura, ni de mantenimiento, ni por la tarjeta, ni de custodia en tus inversiones. Ganamos dinero con servicios opcionales (como el plan Pro) y con lo que nos pagan los comercios cuando usas la tarjeta — nunca a tu costa.</p>
+      </details>
+      <details class="faq__item">
+        <summary>¿Cómo abro la cuenta? ¿Necesito nómina?</summary>
+        <p>Solo necesitas tu DNI o NIE, ser mayor de 18 años y unos 5 minutos. Te haces un selfie, firmas en la pantalla y listo. Sin nómina, sin permanencia y sin ir a ninguna oficina.</p>
+      </details>
+      <details class="faq__item">
+        <summary>¿El 2,3 % TAE tiene truco?</summary>
+        <p>No. Se aplica a todo el saldo de tu cuenta desde el primer euro, los intereses se abonan cada mes y puedes sacar tu dinero cuando quieras. La TAE puede variar en el futuro si cambian los tipos de interés oficiales, y si cambia te avisamos antes.</p>
+      </details>
+      <details class="faq__item">
+        <summary>¿Invertir es arriesgado?</summary>
+        <p>Toda inversión conlleva riesgo: el valor puede subir y bajar, y podrías recuperar menos de lo invertido. Por eso cada producto en blu muestra su nivel de riesgo de forma clara, y blu Academy te enseña los básicos antes de empezar. Invierte solo lo que no necesites a corto plazo.</p>
+      </details>
+      <details class="faq__item">
+        <summary>¿Qué pasa si blu quiebra?</summary>
+        <p>Tu dinero en cuenta está protegido hasta 100.000&nbsp;€ por el Fondo de Garantía de Depósitos. Tus inversiones están a tu nombre en un custodio independiente, así que seguirían siendo tuyas en cualquier caso.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA FINAL ================= -->
+<section class="final" id="descarga">
+  <div class="wrap reveal">
+    <h2>Tu primera buena decisión financiera está a 5 minutos</h2>
+    <p>Descarga la app, abre tu cuenta gratis y empieza a mover tu dinero como tú quieras. Sin compromiso: si no te mola, la cierras en dos toques.</p>
+    <div class="final__actions">
+      <a class="btn btn--primary" href="#">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.94-.19 1.84-.86 3.05-.78 1.45.12 2.55.69 3.27 1.72-3 1.8-2.28 5.75.46 6.84-.55 1.44-1.26 2.86-1.86 4.39zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        App Store
+      </a>
+      <a class="btn btn--ghost" href="#">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.3l10.8 9.7-10.8 9.7c-.4-.2-.6-.6-.6-1.1V3.4c0-.5.2-.9.6-1.1zm12 10.8l2.6 2.3-11.4 6.3 8.8-8.6zm2.6-4.5l-2.6 2.3-8.8-8.6 11.4 6.3zm.9.8l2.4 1.3c.7.4.7 1.4 0 1.8l-2.4 1.3-2.9-2.2 2.9-2.2z"/></svg>
+        Google Play
+      </a>
+    </div>
+    <p class="final__stores">Disponible en iOS y Android · Gratis para siempre</p>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div>
+        <a class="logo" href="#"><span class="logo__dot"></span>blu</a>
+        <p>El dinero, explicado y manejado como en 2026. Hecho en España para la generación que lo va a cambiar todo.</p>
+      </div>
+      <div>
+        <h4>Producto</h4>
+        <ul>
+          <li><a href="#cuenta">Cuenta y tarjeta</a></li>
+          <li><a href="#interes">Cuenta remunerada</a></li>
+          <li><a href="#invertir">Inversión</a></li>
+          <li><a href="#">blu Pro</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Compañía</h4>
+        <ul>
+          <li><a href="#">Sobre blu</a></li>
+          <li><a href="#">Empleo</a></li>
+          <li><a href="#">Prensa</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacidad</a></li>
+          <li><a href="#">Condiciones</a></li>
+          <li><a href="#">Tarifas</a></li>
+          <li><a href="#">Reclamaciones</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer__legal">© 2026 blu Money, S.A. Todos los derechos reservados. blu es una marca ficticia creada como demo de diseño. La rentabilidad del 2,3&nbsp;% TAE es un ejemplo ilustrativo. Invertir conlleva riesgos, incluida la pérdida del capital invertido. Las rentabilidades pasadas no garantizan rentabilidades futuras. Este contenido no constituye asesoramiento financiero.</p>
+  </div>
+</footer>
+
+<script>
+  // Header sólido al hacer scroll
+  const header = document.getElementById('header');
+  const onScroll = () => header.classList.toggle('is-solid', window.scrollY > 24);
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+    });
+  }, { threshold:.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Contadores animados de la sección de stats
+  const fmt = new Intl.NumberFormat('es-ES');
+  const animateCount = (el) => {
+    const to = parseFloat(el.dataset.to);
+    const decimals = parseInt(el.dataset.decimals || '0', 10);
+    const suffix = el.dataset.suffix || '';
+    const dur = 1400;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = (to * eased).toFixed(decimals).replace('.', ',') + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = to.toFixed(decimals).replace('.', ',') + suffix;
+    };
+    requestAnimationFrame(tick);
+  };
+  const ioCount = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { animateCount(e.target); ioCount.unobserve(e.target); }
+    });
+  }, { threshold:.6 });
+  document.querySelectorAll('.count').forEach(el => ioCount.observe(el));
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # Banners Generator
 
+> **Extra**: en `landing/index.html` hay una landing page de demo para un producto financiero Gen Z ("blu"), inspirada en el look & feel de BBVA y Trade Republic. Es un HTML autocontenido: ábrelo directamente en el navegador (usa las fuentes Sora de `fonts/`).
+
 App local para generar banners en los 14 formatos requeridos para Decorabaño, Todo Muebles de Baño, Solomamparas, Decora Salle de Bain y Douche Elite.
 
 ## Requisitos
