@@ -7,6 +7,7 @@ const {
   layoutCategory, escapeHtml, copyToHtml, htmlDocument,
   normalizeCopyKeepingBreaks, fitFontExact, measureLines, campaignBadge,
 } = require('./shared');
+const decor = require('./decor');
 
 function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl }) {
   const { w, h } = format;
@@ -184,6 +185,31 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const scrim = colors.overlayScrim || 'rgba(27,38,37,0.55)';
   const scrimSoft = colors.overlayScrimSoft || 'rgba(27,38,37,0.20)';
 
+  // Campaign decoration: frame / corner texture over the photo, and a seal in
+  // the top-right corner — the copy is centred low, so that corner is free.
+  const deco = brand.campaign ? (brand.decor || {}) : {};
+  const frameInset = padPx * 0.42;
+  // The seal must clear the copy stack: when the column reaches under the
+  // seal's corner, shrink it to the gap above the stack, or drop it if that
+  // gap is too small to carry a legible seal.
+  const sealInset = frameInset + padPx * 0.5;
+  let sealPx = canvasMin * (layout === 'portrait' ? 0.3 : 0.24);
+  const stackTop = h - padBottomPx - stackTotalH;
+  const columnRight = (w + contentWidth) / 2;
+  if (w - sealInset - sealPx < columnRight) {
+    sealPx = Math.min(sealPx, stackTop - sealInset - padPx * 0.4);
+    if (sealPx < canvasMin * 0.15) sealPx = 0;
+  }
+  const decorHtml = [
+    decor.pattern({ cfg: deco.pattern, w, h, id: 'ed-pat' }),
+    decor.frame({ cfg: deco.frame, w, h, inset: frameInset }),
+    decor.sticker({
+      cfg: deco.sticker && { ...deco.sticker, font: deco.sticker.font || brand.fontBody },
+      campaign: brand.campaign, size: sealPx,
+      right: sealInset, top: sealInset,
+    }),
+  ].join('');
+
   const bodyCss = `
     .root {
       width: 100%;
@@ -231,6 +257,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       justify-content: flex-end;
       gap: ${ctaGapPx}px;
       text-align: center;
+      z-index: 4;
     }
     .text-block {
       display: flex;
@@ -292,6 +319,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
       <div class="scrim"></div>
       ${veil ? `<div class="veil"></div>` : ''}
+      ${decorHtml}
       <div class="content">
         <div class="text-block">
           ${badge.html}

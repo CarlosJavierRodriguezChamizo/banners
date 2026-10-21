@@ -14,6 +14,7 @@ const {
   normalizeCopyKeepingBreaks, fitFontExact, measureLines, campaignBadge,
 } = require('./shared');
 const { logoSvg } = require('../logo');
+const decor = require('./decor');
 
 function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl }) {
   const { w, h } = format;
@@ -211,6 +212,22 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     }
   `;
 
+  // Campaign decoration. Panel mode: texture on the panel, sticker on the
+  // photo. Overlay mode: sticker in the top-right corner (copy is bottom-left,
+  // logo top-left).
+  const deco = brand.campaign ? (brand.decor || {}) : {};
+  const stickerCfg = deco.sticker && { ...deco.sticker, font: deco.sticker.font || brand.fontBody };
+  const stickerPx = mode === 'panel'
+    ? Math.min(w * 0.5, h) * 0.42
+    : canvasMin * 0.30;
+  const stickerHtml = decor.sticker({
+    cfg: stickerCfg, campaign: brand.campaign, size: stickerPx,
+    right: padSidePx, top: mode === 'panel' ? padSidePx : padTopPx,
+  });
+  const panelDecorHtml = mode === 'panel'
+    ? decor.pattern({ cfg: deco.pattern, w: Math.round(w * 0.5), h, id: 'fa-pat' })
+    : '';
+
   let bodyCss, body;
 
   if (mode === 'panel') {
@@ -233,6 +250,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         gap: ${Math.round(subtitlePx * 0.8)}px;
         overflow: hidden;
       }
+      .panel > .logo, .panel > .text-block, .panel > .cta { position: relative; z-index: 1; }
       .image-area {
         flex: 1 1 auto;
         position: relative;
@@ -252,6 +270,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     body = `
       <div class="root">
         <div class="panel">
+          ${panelDecorHtml}
           ${logoHtml}
           <div class="text-block">
             ${badge.html}
@@ -263,6 +282,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         <div class="image-area">
           ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
           ${veil ? `<div class="veil"></div>` : ''}
+          ${stickerHtml}
         </div>
       </div>
     `;
@@ -298,6 +318,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         padding: ${padTopPx}px ${padSidePx}px ${padBottomPx}px ${padSidePx}px;
         display: flex;
         flex-direction: column;
+        z-index: 4;
       }
       .bottom {
         margin-top: auto;
@@ -313,6 +334,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
         <div class="scrim"></div>
         ${veil ? `<div class="veil"></div>` : ''}
+        ${stickerHtml}
         <div class="content">
           ${logoHtml}
           <div class="bottom">

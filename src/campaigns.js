@@ -11,7 +11,9 @@ const CAMPAIGNS = {
 
 // Returns the brand with the campaign's overrides merged in, plus a
 // `campaign` field the templates read: null for the generic campaign, else
-// { id, text, ...badge colors/style from the brand config }.
+// { id, label, discount, text, ...badge colors/style from the brand config }.
+// The brand's `decor` block (SVG stickers, tape, patterns — see
+// src/templates/decor.js) lands on brand.decor via the override spread.
 function applyCampaign(brand, campaignId, discount) {
   const campaign = CAMPAIGNS[campaignId];
   if (!campaign || !campaign.label) return { ...brand, campaign: null };
@@ -23,6 +25,8 @@ function applyCampaign(brand, campaignId, discount) {
     colors: { ...brand.colors, ...(override.colors || {}) },
     campaign: {
       id: campaignId,
+      label: campaign.label,
+      discount: extra,
       text: extra ? `${campaign.label} · ${extra}` : campaign.label,
       ...(override.badge || {}),
     },

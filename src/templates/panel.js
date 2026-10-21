@@ -5,6 +5,7 @@ const {
   layoutCategory, escapeHtml, copyToHtml, htmlDocument,
   normalizeCopyKeepingBreaks, measureLines, longestWordLen, campaignBadge,
 } = require('./shared');
+const decor = require('./decor');
 
 function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl, part = 'full' }) {
   const { w, h } = format;
@@ -15,8 +16,19 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
 
   const colors = brand.colors;
 
+  // Campaign decoration (SVG). The sticker always lands on the photo, never on
+  // the text panel; the seam texture grows out of the panel edge.
+  const deco = brand.campaign ? (brand.decor || {}) : {};
+  const stickerCfg = deco.sticker && { ...deco.sticker, font: deco.sticker.font || brand.fontFamily };
+
   // Image-only deliverable: full-bleed photo, no text panel.
   if (part === 'image') {
+    const stickerPx = Math.min(w, h) * 0.34;
+    const decorHtml = [
+      decor.pattern({ cfg: deco.seam && { ...deco.seam, from: 'left', depth: 0.3 }, w, h, id: 'seam' }),
+      decor.tape({ cfg: deco.tape, campaign: brand.campaign, w, h, font: brand.fontFamily }),
+      decor.sticker({ cfg: stickerCfg, campaign: brand.campaign, size: stickerPx, top: h * 0.07, right: h * 0.07 }),
+    ].join('');
     const bodyCss = `
       .root {
         width: 100%; height: 100%;
@@ -40,6 +52,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       <div class="root">
         ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
         ${veil ? `<div class="veil"></div>` : ''}
+        ${decorHtml}
       </div>
     `;
     return htmlDocument({ w, h, bodyCss, body, baseUrl });
@@ -182,6 +195,34 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     ? `<div class="veil"></div>`
     : '';
 
+  // Decoration geometry: the photo is whatever the panel leaves.
+  const rowAxis = panelStyles.axis === 'row';
+  const imgW = rowAxis ? w - panelWidthPx : w;
+  const imgH = rowAxis ? h : h - panelHeightPx;
+  const panelPattern = deco.pattern && {
+    ...deco.pattern,
+    fade: deco.pattern.fade === 'seam' ? (rowAxis ? 'right' : 'bottom') : deco.pattern.fade,
+  };
+  const panelDecorHtml = decor.pattern({
+    cfg: panelPattern, w: Math.round(panelWidthPx), h: Math.round(panelHeightPx), id: 'panel-pat',
+  });
+  const stickerPx = Math.min(imgW, imgH) * (rowAxis ? 0.42 : 0.40);
+  const stickerGap = Math.min(imgW, imgH) * 0.08;
+  const imageDecorHtml = textOnly ? '' : [
+    decor.pattern({
+      cfg: deco.seam && { ...deco.seam, from: rowAxis ? 'left' : 'top', depth: 0.32 },
+      w: Math.round(imgW), h: Math.round(imgH), id: 'seam',
+    }),
+    decor.tape({
+      cfg: deco.tape, campaign: brand.campaign, w: Math.round(imgW), h: Math.round(imgH), font: brand.fontFamily,
+    }),
+    // Wide: top-right of the photo. Stacked: bottom-right, away from the band.
+    decor.sticker({
+      cfg: stickerCfg, campaign: brand.campaign, size: stickerPx, right: stickerGap,
+      ...(rowAxis ? { top: stickerGap } : { bottom: stickerGap }),
+    }),
+  ].join('');
+
   const subHtml = subcopy
     ? `<p class="sub">${copyToHtml(normalizeCopyKeepingBreaks(subcopy))}</p>`
     : '';
@@ -212,7 +253,10 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       justify-content: ${panelJustify};
       gap: ${verticalAnchor ? 0 : 1.5}rem;
       flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
     }
+    .text-block, .cta { position: relative; z-index: 1; }
     .text-block {
       display: flex;
       flex-direction: column;
@@ -280,6 +324,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const body = textOnly ? `
     <div class="root">
       <div class="panel">
+        ${panelDecorHtml}
         <div class="text-block">
           ${badge.html}
           <h1 class="title">${copyToHtml(titleText)}</h1>
@@ -291,6 +336,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   ` : `
     <div class="root">
       <div class="panel">
+        ${panelDecorHtml}
         <div class="text-block">
           ${badge.html}
           <h1 class="title">${copyToHtml(titleText)}</h1>
@@ -301,6 +347,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       <div class="image-area">
         ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
         ${veilCss}
+        ${imageDecorHtml}
       </div>
     </div>
   `;

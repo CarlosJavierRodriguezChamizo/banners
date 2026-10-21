@@ -5,6 +5,7 @@ const {
   escapeHtml, layoutCategory, copyToHtml, htmlDocument,
   normalizeCopyKeepingBreaks, fitFontExact, campaignBadge,
 } = require('./shared');
+const decor = require('./decor');
 
 // Brand swoosh path extracted from the official button SVG (Solomamparas).
 // Bounding box ≈ x:[-2.5, 59.6], y:[-2.6, 94.7]  →  viewBox -3 -3 66 100
@@ -133,6 +134,28 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
        </a>`
     : '';
 
+  // Campaign decoration: tape across the bottom-right corner and a sticker in
+  // the free column right of the title. The copy layer stays on top of both.
+  const deco = brand.campaign ? (brand.decor || {}) : {};
+  const stickerGap = padRem * remPx;
+  // Small canvases (mobile web) have less free column: shrink the sticker and
+  // keep the tape tighter to the corner so it stays clear of the CTA.
+  const small = w < 800;
+  const stickerPx = Math.min(
+    w * (1 - widthFraction) - stickerGap * (small ? 1.6 : 1.3),
+    Math.min(w, h) * (small ? 0.26 : 0.34),
+  );
+  const decorHtml = [
+    decor.tape({
+      cfg: deco.tape && { reach: small ? 0.2 : 0.3, ...deco.tape },
+      campaign: brand.campaign, w, h, font: brand.fontFamily,
+    }),
+    decor.sticker({
+      cfg: deco.sticker && { ...deco.sticker, font: deco.sticker.font || brand.fontFamily },
+      campaign: brand.campaign, size: stickerPx, right: stickerGap * (small ? 0.6 : 1), top: padTopRem * remPx,
+    }),
+  ].join('');
+
   const bodyCss = `
     .root {
       position: relative;
@@ -167,6 +190,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       flex-direction: column;
       justify-content: space-between;
       gap: 2rem;
+      z-index: 4;
     }
     .title {
       width: ${widthFraction * 100}%;
@@ -234,6 +258,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     <div class="root">
       ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
       ${veil ? `<div class="veil"></div>` : ''}
+      ${decorHtml}
       <div class="layer">
         <div class="head">
           ${badge.html}
