@@ -9,7 +9,10 @@
 <body>
   <header class="topbar">
     <h1>Banners Generator</h1>
-    <button id="generate-btn" class="primary" disabled>Generar ZIP</button>
+    <nav style="display:flex;gap:0.75rem;align-items:center">
+      <a href="/video.html" class="secondary" style="text-decoration:none;padding:0.5rem 0.9rem;border-radius:8px">Generar vídeo →</a>
+      <button id="generate-btn" class="primary" disabled>Generar ZIP</button>
+    </nav>
   </header>
 
   <main class="layout">
@@ -20,7 +23,16 @@
       </section>
 
       <section class="card">
-        <h2>2. Copy</h2>
+        <h2>2. Campaña</h2>
+        <div id="campaign-options" class="campaign-options"></div>
+        <label id="discount-row" hidden>Descuento (opcional)
+          <input id="discount" type="text" placeholder="Hasta -40%">
+          <span class="hint">Se añade a la etiqueta de campaña: «Black Friday · Hasta -40%».</span>
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>3. Copy</h2>
         <label>Titular
           <textarea id="copy" rows="3" placeholder="Tu baño no se va a reformar solo, confía en los expertos"></textarea>
           <span class="hint">Escríbelo de corrido. Los saltos de línea se calculan automáticamente según el espacio disponible en cada formato.</span>
@@ -34,13 +46,13 @@
       </section>
 
       <section class="card">
-        <h2>3. Imagen</h2>
+        <h2>4. Imagen</h2>
         <input id="image-input" type="file" accept="image/*">
         <div id="image-status" class="hint">Sube una imagen (JPG/PNG).</div>
       </section>
 
       <section class="card">
-        <h2>4. Ajustes globales</h2>
+        <h2>5. Ajustes globales</h2>
         <label class="row">
           <input id="veil-all" type="checkbox">
           <span>Aplicar velo a todos por defecto</span>

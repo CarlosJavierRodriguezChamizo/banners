@@ -15,6 +15,19 @@ const BRANDS = {
     },
     titleWeight: 500,
     titleCase: 'none',
+    // Seasonal skins (src/campaigns.js). Black Friday swaps the navy for black
+    // and keeps the brand's light blue as the accent; Cyber Monday goes to a
+    // saturated electric navy with a cyan outline badge.
+    campaigns: {
+      'black-friday': {
+        colors: { panel: '#0B0B0D', subtext: 'rgba(255,255,255,0.78)', cta: '#B6D8E5', ctaText: '#0B0B0D' },
+        badge: { bg: '#B6D8E5', fg: '#0B0B0D' },
+      },
+      'cyber-monday': {
+        colors: { panel: '#0A1F5C', cta: '#5CE1FF', ctaText: '#0A1F5C' },
+        badge: { border: '#5CE1FF', fg: '#5CE1FF' },
+      },
+    },
   },
   'decora-salle-de-bain': {
     name: 'Decora Salle de Bain',
@@ -29,6 +42,19 @@ const BRANDS = {
     },
     titleWeight: 500,
     titleCase: 'none',
+    // Seasonal skins (src/campaigns.js). Black Friday swaps the navy for black
+    // and keeps the brand's light blue as the accent; Cyber Monday goes to a
+    // saturated electric navy with a cyan outline badge.
+    campaigns: {
+      'black-friday': {
+        colors: { panel: '#0B0B0D', subtext: 'rgba(255,255,255,0.78)', cta: '#B6D8E5', ctaText: '#0B0B0D' },
+        badge: { bg: '#B6D8E5', fg: '#0B0B0D' },
+      },
+      'cyber-monday': {
+        colors: { panel: '#0A1F5C', cta: '#5CE1FF', ctaText: '#0A1F5C' },
+        badge: { border: '#5CE1FF', fg: '#5CE1FF' },
+      },
+    },
   },
   'solomamparas': {
     name: 'Solomamparas',
@@ -40,9 +66,25 @@ const BRANDS = {
       tagText: '#FFFFFF',
       cta: '#F26B2A',
       ctaText: '#FFFFFF',
+      // Video only — cupones slide: brand blue base with the brighter promo orange.
+      videoCouponBg: '#0091EB',
+      videoCouponAccent: '#FF7701',
     },
     titleWeight: 800,
     titleCase: 'uppercase',
+    // Seasonal skins (src/campaigns.js). Black Friday turns the blue tags black
+    // with the brand orange as badge + CTA; Cyber Monday uses deep navy tags
+    // with an electric cyan badge.
+    campaigns: {
+      'black-friday': {
+        colors: { tagBg: '#0A0A0A', tagBgAlpha: 'rgba(10,10,10,0.88)' },
+        badge: { bg: '#F26B2A', fg: '#FFFFFF' },
+      },
+      'cyber-monday': {
+        colors: { tagBg: '#0E204A', tagBgAlpha: 'rgba(14,32,74,0.90)' },
+        badge: { bg: '#2CC8F2', fg: '#0E204A' },
+      },
+    },
   },
   'douche-elite': {
     name: 'Douche Elite',
@@ -57,6 +99,19 @@ const BRANDS = {
     },
     titleWeight: 800,
     titleCase: 'uppercase',
+    // Seasonal skins (src/campaigns.js). Black Friday turns the blue tags black
+    // with the brand orange as badge + CTA; Cyber Monday uses deep navy tags
+    // with an electric cyan badge.
+    campaigns: {
+      'black-friday': {
+        colors: { tagBg: '#0A0A0A', tagBgAlpha: 'rgba(10,10,10,0.88)' },
+        badge: { bg: '#F26B2A', fg: '#FFFFFF' },
+      },
+      'cyber-monday': {
+        colors: { tagBg: '#0E204A', tagBgAlpha: 'rgba(14,32,74,0.90)' },
+        badge: { bg: '#2CC8F2', fg: '#0E204A' },
+      },
+    },
   },
   'todo-muebles': {
     name: 'Todo Muebles de Baño',
@@ -64,15 +119,56 @@ const BRANDS = {
     fontTitle: 'Ogg, Georgia, "Times New Roman", serif',
     fontBody: '"Suisse Intl", "Helvetica Neue", Arial, sans-serif',
     colors: {
+      // Photographic banners: full-bleed photo, butter yellow type centred on a
+      // dark green tinted scrim, outlined (ghost) CTA in the same yellow.
+      overlayTitle: '#FBEC80',                  // brand butter yellow
+      overlayBody: 'rgba(251,236,128,0.92)',
+      overlayScrim: 'rgba(27,38,37,0.55)',      // centre of the scrim, over the copy
+      overlayScrimSoft: 'rgba(27,38,37,0.18)',  // edges of the scrim
+      overlayBg: '#2C403F',                     // fallback when there's no photo
+      frame: '#E1E1E1',                         // hairline border around the canvas
+      cta: '#FBEC80',                           // ghost CTA: border + label
+      // Kept for the video generator's palette normalization.
       panel: '#A6B9A5',
       patternLine: 'rgba(255,255,255,0.5)',
       title: '#382B33',
       body: '#382B33',
-      cta: '#FBEC80',
-      ctaText: '#382B33',
+    },
+    // Video-only styling (read by src/video/slides.js). Every frame sits on the
+    // sage green, lined with the brand pattern; dark green carries the small
+    // accents and butter yellow the large masses (buttons, chips, badges).
+    video: {
+      bg: '#A6B9A5',
+      accent: '#2C403F',
+      accentMass: '#FDE68A',
+      onAccentMass: '#2C403F',
+      pattern: true,
+      ctaSans: true,
+      ctaShadow: false,
+      couponStyle: 'stub',
     },
     titleWeight: 400,
     titleCase: 'none',
+    // Seasonal skins (src/campaigns.js). The ghost CTA becomes a filled yellow
+    // button for urgency. Black Friday darkens the scrim to near-black (yellow
+    // on black) with a hairline-flanked eyebrow; Cyber Monday keeps the brand
+    // green with a sage pill eyebrow.
+    campaigns: {
+      'black-friday': {
+        colors: {
+          overlayScrim: 'rgba(8,10,10,0.68)', overlayScrimSoft: 'rgba(8,10,10,0.30)',
+          overlayBg: '#0E0F0F', ctaFill: '#FBEC80', ctaFillText: '#141414',
+        },
+        badge: { fg: '#FBEC80', rule: true },
+      },
+      'cyber-monday': {
+        colors: {
+          overlayScrim: 'rgba(27,38,37,0.66)', overlayScrimSoft: 'rgba(27,38,37,0.26)',
+          ctaFill: '#FBEC80', ctaFillText: '#2C403F',
+        },
+        badge: { bg: '#A6B9A5', fg: '#2C403F' },
+      },
+    },
   },
   'nuria-cobo': {
     name: 'Nuria Cobo',
@@ -80,17 +176,42 @@ const BRANDS = {
     fontTitle: 'Ogg, "Times New Roman", Georgia, serif',
     fontBody: '"Suisse Intl", "Helvetica Neue", Arial, sans-serif',
     colors: {
-      bg: '#FFFFFF',
-      title: '#1F4380',
-      subtitle: '#4A4A4A',
-      cta: '#EE7896',
+      // Panel mode (wide formats): cream background, black serif title.
+      panelBg: '#F3EFE8',
+      title: '#161616',          // black title on the cream panel
+      subtitle: '#5A5A5A',
+      // Overlay mode (square/portrait): white text over the photo.
+      titleOverlay: '#FFFFFF',
+      subtitleOverlay: 'rgba(255,255,255,0.92)',
+      // Shared.
+      cta: '#EF8AA3',            // rose pink pill
       ctaText: '#FFFFFF',
-      wordmark: '#1F4380',
+      logo: '#1B70B5',           // logo color on panels
+      logoOverlay: '#FFFFFF',    // logo color over photos
     },
-    titleWeight: 400,
-    titleStyle: 'italic',
+    titleWeight: 400,            // Ogg Roman only — never italic
     titleCase: 'none',
-    wordmark: 'Nuria Cobo',
+    // Seasonal skins (src/campaigns.js). Black Friday: black panel, white type,
+    // rose eyebrow with a hairline. Cyber Monday: the logo blue as panel with a
+    // rose pill badge. Overlays get a slightly deeper scrim for the extra line.
+    campaigns: {
+      'black-friday': {
+        colors: {
+          panelBg: '#121212', title: '#FFFFFF', subtitle: 'rgba(255,255,255,0.72)',
+          logo: '#FFFFFF', overlayScrim: 'rgba(0,0,0,0.62)',
+        },
+        // Bare rose label on the panel; over photos it needs a backing, so the
+        // overlay layouts get a black pill instead.
+        badge: { fg: '#EF8AA3', rule: true, overlay: { bg: '#121212', fg: '#EF8AA3', rule: false } },
+      },
+      'cyber-monday': {
+        colors: {
+          panelBg: '#1B70B5', title: '#FFFFFF', subtitle: 'rgba(255,255,255,0.85)',
+          logo: '#FFFFFF', overlayScrim: 'rgba(0,0,0,0.58)',
+        },
+        badge: { bg: '#EF8AA3', fg: '#FFFFFF' },
+      },
+    },
   },
 };
 

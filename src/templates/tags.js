@@ -3,7 +3,7 @@
 
 const {
   escapeHtml, layoutCategory, copyToHtml, htmlDocument,
-  normalizeCopyKeepingBreaks, fitFontExact,
+  normalizeCopyKeepingBreaks, fitFontExact, campaignBadge,
 } = require('./shared');
 
 // Brand swoosh path extracted from the official button SVG (Solomamparas).
@@ -66,10 +66,22 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   // Title text area (W × H).
   const titleAreaW = w * widthFraction - 2 * tagPadPx;
   const ctaReservedPx = showCta ? (layout === 'wide' ? 120 : 170) : 0;
+  // Campaign badge: a solid tag stacked on top of the title tags, same type.
+  const badge = campaignBadge({
+    campaign: brand.campaign,
+    fontFamily: brand.fontFamily,
+    fontWeight: 800,
+    W: w * widthFraction,
+    maxPx: Math.max(16, Math.min(remPx * 3.4, 44)),
+    charRatio: 0.66,
+    tracking: 0.06,
+  });
+  const badgeGapPx = Math.round(badge.px * 0.6);
+  const badgeBlockPx = badge.heightPx ? badge.heightPx + badgeGapPx : 0;
   const titleAreaH = Math.min(
     h - 2 * layerPadXPx - ctaReservedPx,
     h * 0.40,  // never more than 40% of canvas height vertically
-  );
+  ) - badgeBlockPx;
   // Also clamp by area cap (22% of canvas).
   const areaCap = w * h * 0.22;
   const titleAreaWidthForArea = Math.min(titleAreaW, areaCap / titleAreaH);
@@ -207,12 +219,15 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       letter-spacing: 0.02em;
       white-space: nowrap;
     }
+    .head { display: flex; flex-direction: column; }
+    .campaign { margin-bottom: ${badgeGapPx}px; }
     .cta-swoosh {
       width: ${swooshWidthPx}px;
       height: ${swooshHeightPx}px;
       flex-shrink: 0;
       display: block;
     }
+    ${badge.css}
   `;
 
   const body = `
@@ -220,7 +235,8 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
       ${veil ? `<div class="veil"></div>` : ''}
       <div class="layer">
-        <div>
+        <div class="head">
+          ${badge.html}
           <div class="title">${titleHtml}</div>
           ${subHtml}
         </div>

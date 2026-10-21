@@ -3,10 +3,10 @@
 
 const {
   layoutCategory, escapeHtml, copyToHtml, htmlDocument,
-  normalizeCopyKeepingBreaks, fitFontExact,
+  normalizeCopyKeepingBreaks, measureLines, longestWordLen, campaignBadge,
 } = require('./shared');
 
-function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl }) {
+function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl, part = 'full' }) {
   const { w, h } = format;
   const layout = layoutCategory(w, h);
   const focalX = Math.max(0, Math.min(100, focal?.x ?? 50));
@@ -14,6 +14,39 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const zoomScale = Math.max(1, Math.min(4, Number(zoom) || 1));
 
   const colors = brand.colors;
+
+  // Image-only deliverable: full-bleed photo, no text panel.
+  if (part === 'image') {
+    const bodyCss = `
+      .root {
+        width: 100%; height: 100%;
+        position: relative; overflow: hidden;
+        background: ${colors.panel};
+      }
+      .bg-image {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        object-position: ${focalX}% ${focalY}%;
+        transform: scale(${zoomScale});
+        transform-origin: ${focalX}% ${focalY}%;
+      }
+      .veil {
+        position: absolute; inset: 0;
+        background: linear-gradient(to right, rgba(15,42,71,0.35), rgba(15,42,71,0));
+        pointer-events: none;
+      }
+    `;
+    const body = `
+      <div class="root">
+        ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
+        ${veil ? `<div class="veil"></div>` : ''}
+      </div>
+    `;
+    return htmlDocument({ w, h, bodyCss, body, baseUrl });
+  }
+
+  // Text-only deliverable: the blue panel fills the whole canvas.
+  const textOnly = part === 'text';
 
   // Format-specific behavior
   const isInstagramStory = w === 1080 && h === 1920;
@@ -29,7 +62,6 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     portrait: { axis: 'column', cross: '42%', dim: 'h' },
   }[layout];
 
-  const subRem    = 2.8;
   const ctaRem    = 3.4;
   const padRem    = layout === 'portrait' ? 4 : 5;
   // Extra top padding for Instagram Story so the IG avatar doesn't overlap.
@@ -38,10 +70,13 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
 
   // Auto-size title and CTA so they always fit the panel width.
   const remPx = Math.min(w, h) / 100;
+  const padTopPx = padTopRem * remPx;
+  const padBotPx = padRem * remPx;
   const layerPadPx = padRem * remPx;
   const crossFraction = parseInt(panelStyles.cross, 10) / 100;
-  const panelWidthPx = panelStyles.dim === 'w' ? w * crossFraction : w;
-  const panelHeightPx = panelStyles.dim === 'h' ? h * crossFraction : h;
+  // Text-only fills the whole canvas; otherwise the panel is a fraction of it.
+  const panelWidthPx = textOnly ? w : (panelStyles.dim === 'w' ? w * crossFraction : w);
+  const panelHeightPx = textOnly ? h : (panelStyles.dim === 'h' ? h * crossFraction : h);
   const availableTextWidth = panelWidthPx - 2 * layerPadPx;
   // Constrain text container: in stacked layouts (square/portrait) the panel
   // spans the full canvas, so let the text occupy at most 80% of that width.
@@ -50,21 +85,20 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const titleContainerWidth = availableTextWidth * textWidthFraction;
   // Continuous text with optional explicit \n preserved as hard breaks.
   const titleText = normalizeCopyKeepingBreaks(copy);
+  const subText = normalizeCopyKeepingBreaks(subcopy);
   // Lausanne sans-serif effective char width ≈ 0.58 × font-size.
   const titleCharRatio = 0.58;
+  const subCharRatio = 0.55;
   const tagLineH = 1.15;
-  const maxTitlePx = layout === 'wide' ? 70 : layout === 'square' ? 90 : 85;
-  const reservedPx = (subcopy ? 110 : 0) + (showCta ? 160 : 0); // sub + CTA + gaps
-  const availableTextHeight = panelHeightPx - 2 * layerPadPx - reservedPx;
-  const titlePx = Math.max(24, fitFontExact({
-    text: titleText,
-    W: titleContainerWidth,
-    H: availableTextHeight,
-    charRatio: titleCharRatio,
-    lineHeight: tagLineH,
-    maxPx: maxTitlePx,
-    minPx: 24,
-  }));
+  const subLineH = 1.35;
+  // The subtitle is sized *relative to the title* so the two always keep a
+  // readable hierarchy — a fixed rem size made short titles tower over it.
+  const subRatio  = 0.77;          // title : subtitle ≈ 1.3 : 1
+  const subMinPx  = 2.8 * remPx;
+  const subMaxPx  = 5.6 * remPx;
+  // Gap grows with the title so the two never crowd each other.
+  const gapFor    = (px) => Math.max(1.2 * remPx, px * 0.42);
+  const subWidthPx = titleContainerWidth * 0.9; // .sub max-width: 90%
 
   // CTA sizing. Font scales with the panel (its real container, not the
   // canvas's min dimension which is the height for wide landscapes).
@@ -83,6 +117,66 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const ctaPx     = Math.max(18, Math.min(ctaTargetPx, maxCtaByWidth));
   const ctaPadVPx = ctaPx * ctaPadVRatio;
   const ctaPadHPx = ctaPx * ctaPadHRatio;
+
+  // Height the CTA actually takes away from the text block (button + its gap).
+  const hasCta = showCta && !!cta;
+  const ctaBlockPx = hasCta
+    ? ctaPx * (1 + 2 * ctaPadVRatio) + ctaGapRem * remPx
+    : 0;
+  // Campaign badge sits above the title; its height comes out of the text budget.
+  const badge = campaignBadge({
+    campaign: brand.campaign,
+    fontFamily: brand.fontFamily,
+    fontWeight: 700,
+    W: titleContainerWidth,
+    maxPx: Math.max(14, Math.min(remPx * 2.8, 34)),
+    charRatio: 0.66,
+    tracking: 0.14,
+    radius: 999,
+  });
+  const badgeGapPx = badge.px * 1.2;
+  // The rendered gap is max(badgeGap, the text-block gap), and the latter grows
+  // with the title — reserve against the largest title size to stay safe.
+  const badgeBlockPx = badge.heightPx
+    ? badge.heightPx + Math.max(badgeGapPx, gapFor(layout === 'wide' ? 54 : 68))
+    : 0;
+  const availableTextHeight = panelHeightPx - padTopPx - padBotPx - ctaBlockPx - badgeBlockPx;
+
+  // Largest title size at which title + subtitle together still fit. Both are
+  // measured with the real wrap model, so the pair is fitted as one block
+  // instead of the title hogging space against a fixed reserve.
+  const maxTitlePx = layout === 'wide' ? 54 : layout === 'square' ? 68 : 64;
+  const minTitlePx = 24;
+  const longestTitleWord = longestWordLen(titleText);
+  // The floor never overtakes the title: on very long copy the title shrinks,
+  // and the subtitle has to shrink with it rather than outgrow it.
+  const subSizeFor = (px) => (subText
+    ? Math.min(subMaxPx, Math.max(Math.min(subMinPx, px * 0.75), px * subRatio))
+    : 0);
+
+  let titlePx = minTitlePx;
+  let subPx = subSizeFor(minTitlePx);
+  let blockGapPx = gapFor(minTitlePx);
+  for (let px = maxTitlePx; px >= minTitlePx; px--) {
+    const charsPerLine = Math.floor(titleContainerWidth / (px * titleCharRatio));
+    // Refuse this size if the longest word can't fit on one line.
+    if (charsPerLine < longestTitleWord) continue;
+    const candSubPx = subSizeFor(px);
+    const titleH = measureLines({
+      text: titleText, W: titleContainerWidth, px, charRatio: titleCharRatio,
+    }) * tagLineH * px;
+    const subH = subText
+      ? measureLines({
+          text: subText, W: subWidthPx, px: candSubPx, charRatio: subCharRatio,
+        }) * subLineH * candSubPx + gapFor(px)
+      : 0;
+    if (titleH + subH <= availableTextHeight) {
+      titlePx = px;
+      subPx = candSubPx;
+      blockGapPx = gapFor(px);
+      break;
+    }
+  }
 
   const veilCss = veil
     ? `<div class="veil"></div>`
@@ -108,7 +202,9 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       background: ${colors.panel};
     }
     .panel {
-      ${panelStyles.axis === 'row' ? `width: ${panelStyles.cross};` : `height: ${panelStyles.cross};`}
+      ${textOnly
+        ? 'width: 100%; height: 100%;'
+        : (panelStyles.axis === 'row' ? `width: ${panelStyles.cross};` : `height: ${panelStyles.cross};`)}
       background: ${colors.panel};
       padding: ${padTopRem}rem ${padRem}rem ${padRem}rem ${padRem}rem;
       display: flex;
@@ -120,7 +216,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     .text-block {
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      gap: ${blockGapPx}px;
       max-width: ${textWidthFraction * 100}%;
     }
     .title {
@@ -135,10 +231,11 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       overflow-wrap: normal;
       word-break: normal;
     }
+    .campaign { margin-bottom: ${Math.max(0, badgeGapPx - blockGapPx)}px; }
     .sub {
-      font-size: ${subRem}rem;
+      font-size: ${subPx}px;
       font-weight: 400;
-      line-height: 1.3;
+      line-height: ${subLineH};
       color: ${colors.subtext};
       max-width: 90%;
     }
@@ -177,12 +274,25 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       background: linear-gradient(to right, rgba(15,42,71,0.35), rgba(15,42,71,0));
       pointer-events: none;
     }
+    ${badge.css}
   `;
 
-  const body = `
+  const body = textOnly ? `
     <div class="root">
       <div class="panel">
         <div class="text-block">
+          ${badge.html}
+          <h1 class="title">${copyToHtml(titleText)}</h1>
+          ${subHtml}
+        </div>
+        ${showCta && cta ? `<a class="cta">${escapeHtml(cta)}</a>` : ''}
+      </div>
+    </div>
+  ` : `
+    <div class="root">
+      <div class="panel">
+        <div class="text-block">
+          ${badge.html}
           <h1 class="title">${copyToHtml(titleText)}</h1>
           ${subHtml}
         </div>

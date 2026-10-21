@@ -231,3 +231,8 @@ button.secondary:hover { background: #f0f0f0; }
   margin: 0 auto 12px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.campaign-options { display: flex; flex-direction: column; gap: 6px; }
+.campaign-options label.row { cursor: pointer; margin: 0; }
+#discount-row { margin-top: 10px; }
+#discount-row[hidden] { display: none; }

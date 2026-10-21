@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generador de vídeo</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .seg { display: flex; gap: 0.5rem; }
+    .seg button { flex: 1; padding: 0.55rem; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; cursor: pointer; font: inherit; }
+    .seg button.active { background: #0f2a47; color: #fff; border-color: #0f2a47; }
+    .product { border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.8rem; margin-bottom: 0.8rem; background: #f8fafc; }
+    .product h4 { margin: 0 0 0.5rem; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+    .product .link { color: #b91c1c; cursor: pointer; font-size: 0.8rem; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .file-name { font-size: 0.75rem; color: #64748b; display: block; margin-top: 0.2rem; }
+    .vcard { background: #0b0b0b; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+    .vcard header { padding: 0.5rem 0.8rem; background: #111827; color: #e5e7eb; font-size: 0.85rem; display: flex; justify-content: space-between; }
+    /* The iframe is laid out at full slide size and scaled down. It must be
+       absolutely positioned: as a flex item it was shrunk to the card width
+       first and the scale then applied on top, leaving a sliver of a preview. */
+    .vcard .vwrap { position: relative; background: #000; overflow: hidden; }
+    .vcard iframe { border: 0; transform-origin: top left; position: absolute; top: 0; left: 0; }
+    label.blk { display: block; margin-bottom: 0.6rem; font-size: 0.85rem; }
+    label.blk textarea, label.blk input[type=text] { width: 100%; margin-top: 0.25rem; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Generador de vídeo</h1>
+    <nav style="display:flex;gap:0.75rem;align-items:center">
+      <a href="/" class="secondary" style="text-decoration:none;padding:0.5rem 0.9rem;border-radius:8px">← Banners</a>
+      <button id="generate-btn" class="primary" disabled>Generar vídeo</button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>1. Marca y formato</h2>
+        <select id="brand-select"></select>
+        <div class="seg" style="margin-top:0.7rem">
+          <button data-format="short" class="active">Short / TikTok<br><small>1080×1920</small></button>
+          <button data-format="youtube">YouTube<br><small>1920×1080</small></button>
+        </div>
+        <label class="blk" style="margin-top:0.8rem">Movimiento de imagen
+          <select id="image-motion">
+            <option value="auto">Auto (varía por slide)</option>
+            <option value="zoom-out">Zoom out</option>
+            <option value="zoom-in">Zoom in (Ken Burns)</option>
+            <option value="pan">Paneo</option>
+            <option value="static">Estático</option>
+          </select></label>
+      </section>
+
+      <section class="card">
+        <h2>2. Portada</h2>
+        <label class="blk">Título
+          <textarea id="p-titulo" rows="2" placeholder="Rebajas en mamparas"></textarea></label>
+        <label class="blk">Párrafo
+          <textarea id="p-parrafo" rows="2" placeholder="Hasta -40% en toda la colección"></textarea></label>
+        <label class="blk">Imagen
+          <input type="file" accept="image/*" data-upload="portada.imageUrl">
+          <span class="file-name" data-name="portada.imageUrl"></span></label>
+      </section>
+
+      <section class="card">
+        <h2>3. Productos</h2>
+        <div id="product-list"></div>
+        <button id="add-product" class="secondary">+ Añadir producto</button>
+      </section>
+
+      <section class="card">
+        <h2>4. Cupones <small>(opcional)</small></h2>
+        <label class="row"><input type="checkbox" id="cup-enabled"><span>Incluir pantalla de cupones</span></label>
+        <div id="cup-fields" hidden>
+          <label class="blk">Título
+            <input type="text" id="cup-titulo" placeholder="Cupones descuento"></label>
+          <label class="blk">Cupones (uno por línea: <code>CÓDIGO · X% Dto. condición</code>)
+            <textarea id="cup-codigos" rows="4" placeholder="DB5 · 5% Dto. en pedidos superiores a 295€&#10;DB7 · 7% Dto. en pedidos superiores a 625€&#10;DB10 · 10% Dto. en pedidos superiores a 995€"></textarea></label>
+          <label class="blk">Disclaimer (marcas excluidas)
+            <textarea id="cup-disclaimer" rows="2" placeholder="No acumulable. Excluidas marcas X e Y."></textarea></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. Cierre</h2>
+        <label class="blk">Título
+          <textarea id="c-titulo" rows="2" placeholder="Renueva tu baño"></textarea></label>
+        <label class="blk">CTA
+          <input type="text" id="c-cta" placeholder="Ver ofertas"></label>
+        <label class="blk">Frase de refuerzo (opcional)
+          <input type="text" id="c-refuerzo" placeholder="Envío en 48h"></label>
+      </section>
+
+      <section class="card">
+        <h2>6. Logo y audio <small>(opcional)</small></h2>
+        <label class="blk">Logo
+          <input type="file" accept="image/*" data-upload="logoUrl">
+          <span class="file-name" data-name="logoUrl"></span></label>
+        <label class="blk">Locución
+          <input type="file" accept="audio/*" data-upload="audio.locucionUrl">
+          <span class="file-name" data-name="audio.locucionUrl"></span></label>
+        <label class="blk">Música de fondo
+          <input type="file" accept="audio/*" data-upload="audio.musicaUrl">
+          <span class="file-name" data-name="audio.musicaUrl"></span></label>
+      </section>
+
+      <section class="card">
+        <h2>Sesión guardada</h2>
+        <p class="hint" id="save-status">Los campos se guardan solos en este navegador.</p>
+        <button id="clear-saved" class="secondary" style="margin-top:0.6rem">Empezar de cero</button>
+      </section>
+    </aside>
+
+    <section class="grid" id="slide-grid"></section>
+  </main>
+
+  <div id="overlay" hidden>
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p id="overlay-msg">Generando vídeo…</p>
+    </div>
+  </div>
+
+  <script src="/video.js"></script>
+</body>
+</html>

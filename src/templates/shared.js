@@ -97,6 +97,78 @@ function fitFontExact({ text, W, H, charRatio, lineHeight, maxPx = 200, minPx = 
   return minPx;
 }
 
+// Count how many visual lines `text` occupies at a given font size, using the
+// same wrap model as fitFontExact (honors \n, 1.05 word-boundary slack). Lets a
+// caller reserve the exact height a wrapped block will take before laying out.
+function measureLines({ text, W, px, charRatio }) {
+  if (!text || W <= 0 || px <= 0) return 0;
+  const segments = String(text).split('\n').filter((s) => s.length > 0);
+  const charsPerLine = Math.max(1, Math.floor(W / (px * charRatio)));
+  let lines = 0;
+  for (const seg of segments) {
+    lines += Math.max(1, Math.ceil((seg.length * 1.05) / charsPerLine));
+  }
+  return lines;
+}
+
+// Campaign badge ("BLACK FRIDAY · HASTA -40%") drawn above the title. The look
+// comes from the brand's campaign config (src/brands.js → campaigns.<id>.badge):
+//   bg     → filled box        border → outlined box
+//   rule   → bare tracked label flanked by hairlines (one side when left-aligned)
+// The font size is fitted so the label never overflows `W`. Returns the markup,
+// its CSS, and the height it takes so templates can reserve it before fitting
+// the title. Empty strings / 0 when there's no active campaign.
+function campaignBadge({
+  campaign, fontFamily, fontWeight = 700, W, maxPx, minPx = 11,
+  charRatio = 0.62, tracking = 0.14, align = 'start', radius = 0,
+}) {
+  if (!campaign?.text) return { html: '', css: '', heightPx: 0, px: 0 };
+  const text = String(campaign.text).toUpperCase();
+  const boxed = !!(campaign.bg || campaign.border);
+  const padVEm = boxed ? 0.55 : 0;
+  const padHEm = boxed ? 0.9 : 0;
+  const rules = campaign.rule ? (align === 'center' ? 2 : 1) : 0;
+  const ruleEm = 1.8;   // hairline length
+  const ruleGapEm = 0.8;
+  const emPerPx = text.length * (charRatio + tracking) + 2 * padHEm
+    + rules * (ruleEm + ruleGapEm);
+  const px = Math.round(Math.max(minPx, Math.min(maxPx, W / emPerPx)));
+  const borderPx = campaign.border ? Math.max(1, Math.round(px * 0.08)) : 0;
+  const heightPx = px * (1 + 2 * padVEm) + 2 * borderPx;
+  const rule = '<span class="campaign-rule"></span>';
+
+  const css = `
+    .campaign {
+      display: inline-flex;
+      align-items: center;
+      gap: ${ruleGapEm}em;
+      align-self: ${align === 'center' ? 'center' : 'flex-start'};
+      font-family: ${fontFamily};
+      font-size: ${px}px;
+      font-weight: ${fontWeight};
+      line-height: 1;
+      letter-spacing: ${tracking}em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: ${campaign.fg || 'currentColor'};
+      background: ${campaign.bg || 'transparent'};
+      border: ${borderPx ? `${borderPx}px solid ${campaign.border}` : '0'};
+      border-radius: ${typeof radius === 'number' ? `${radius}px` : radius};
+      padding: ${padVEm}em ${padHEm}em;
+      flex-shrink: 0;
+    }
+    /* Trailing letter-spacing would push the label off-centre. */
+    .campaign-text { margin-right: -${tracking}em; }
+    .campaign-rule {
+      width: ${ruleEm}em;
+      height: ${Math.max(1, Math.round(px * 0.07))}px;
+      background: currentColor;
+    }
+  `;
+  const html = `<div class="campaign">${rules === 2 ? rule : ''}<span class="campaign-text">${escapeHtml(text)}</span>${rules ? rule : ''}</div>`;
+  return { html, css, heightPx, px };
+}
+
 // Build the @font-face block. Filenames match exactly what's in /fonts/<family>/.
 function fontFaceCss() {
   return `
@@ -181,6 +253,9 @@ module.exports = {
   normalizeCopyKeepingBreaks,
   fitFontByArea,
   fitFontExact,
+  measureLines,
   longestWordLen,
+  campaignBadge,
+  fontFaceCss,
   htmlDocument,
 };

@@ -1,11 +1,19 @@
-// "fashion" style: editorial Vogue/AD look-and-feel. White panel with a small
-// brand wordmark at the top, an elegant serif italic title in navy, a clean
-// sans subtitle and a rose-pink pill CTA at the bottom. Used by Nuria Cobo.
+// "fashion" style: editorial Vogue/Telva look-and-feel for Nuria Cobo.
+//
+// Two layouts, picked by format shape:
+//   - wide formats     → PANEL mode: a cream text panel beside the photo,
+//                        blue serif (Ogg Roman) title, rose-pink pill CTA.
+//   - square/portrait  → OVERLAY mode: full-bleed photo with white serif text
+//                        anchored to the bottom-left and a soft scrim for legibility.
+//
+// The logo lockup (monogram + "Nuria Cobo") is shown ONLY on Google formats:
+// blue on the panel, white over the photo. Never italic.
 
 const {
   layoutCategory, escapeHtml, copyToHtml, htmlDocument,
-  normalizeCopyKeepingBreaks, fitFontExact,
+  normalizeCopyKeepingBreaks, fitFontExact, measureLines, campaignBadge,
 } = require('./shared');
+const { logoSvg } = require('../logo');
 
 function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format, baseUrl }) {
   const { w, h } = format;
@@ -13,147 +21,160 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const focalX = Math.max(0, Math.min(100, focal?.x ?? 50));
   const focalY = Math.max(0, Math.min(100, focal?.y ?? 50));
   const zoomScale = Math.max(1, Math.min(4, Number(zoom) || 1));
-
   const colors = brand.colors;
 
-  // Panel/image split.
-  // Wide:     50/50 (text panel left, image right) — classic editorial layout
-  // Square:   stack vertically with text panel ~46% on top
-  // Portrait: stack vertically with text panel ~42% on top
-  const panelStyles = {
-    wide:     { axis: 'row',    cross: '50%', dim: 'w' },
-    square:   { axis: 'column', cross: '46%', dim: 'h' },
-    portrait: { axis: 'column', cross: '42%', dim: 'h' },
-  }[layout];
+  const mode = layout === 'wide' ? 'panel' : 'overlay';
 
-  // Format-specific behavior.
-  const isInstagramStory    = w === 1080 && h === 1920;
-  const isTwitterHeader     = w === 1500 && h === 500;
-  const isFacebookCover     = w === 1650 && h === 671;
+  // Logo only on Google formats.
+  const showLogo = format.platform === 'google';
+
+  // Format-specific CTA suppression (banners that are too short / are headers).
+  const isInstagramStory = w === 1080 && h === 1920;
+  const isTwitterHeader  = w === 1500 && h === 500;
+  const isFacebookCover  = w === 1650 && h === 671;
   const showCta = cta && !(isInstagramStory || isTwitterHeader || isFacebookCover);
 
-  const padRem    = layout === 'portrait' ? 4 : 5;
-  const remPx     = Math.min(w, h) / 100;
-  const crossFraction = parseInt(panelStyles.cross, 10) / 100;
-  const panelWidthPx  = panelStyles.dim === 'w' ? w * crossFraction : w;
-  const panelHeightPx = panelStyles.dim === 'h' ? h * crossFraction : h;
-
-  // Padding: IG Story → 180 px top so the avatar doesn't overlap the wordmark.
-  const padTopPx    = isInstagramStory ? 180 : padRem * remPx;
-  const padBottomPx = padRem * remPx;
-  const padLeftPx   = padRem * remPx;
-  const padRightPx  = padRem * remPx;
-  const contentWidth = panelWidthPx - padLeftPx - padRightPx;
-
-  // Text container width: stacked layouts use 90% to leave clear margin.
-  const textWidthFraction = layout === 'wide' ? 1.0 : 0.90;
-  const titleContainerWidth = contentWidth * textWidthFraction;
-
-  // Typography rules:
-  //   subtitlePx — baseline scaling with the canvas
-  //   titlePx    = subtitlePx + 18  (serif title is more dramatic than Todo Muebles)
-  //   ctaPx      — its own compact scale, capped so the pill stays elegant
-  //   wordmarkPx — smaller than subtitle for a discreet brand mark
   const canvasMin = Math.min(w, h);
-  let subtitlePx  = Math.max(22, Math.min(canvasMin * 0.065, 64));
-  let titlePx     = subtitlePx + 18;
-  let ctaPx       = Math.max(16, Math.min(canvasMin * 0.035, 32));
-  const wordmarkPx = Math.max(18, Math.min(canvasMin * 0.045, 40));
+  const remPx = canvasMin / 100;
 
-  // CTA must fit the panel width.
-  const ctaCharRatio = 0.55;
-  const ctaPadHRatio = 1.30;
-  const ctaTextLen   = (cta || '').length;
-  const maxCtaByWidth = ctaTextLen > 0
-    ? contentWidth / (ctaTextLen * ctaCharRatio + 2 * ctaPadHRatio)
-    : Infinity;
-  ctaPx = Math.max(14, Math.min(ctaPx, maxCtaByWidth));
+  // Typography baselines. Panels get a noticeably larger title than overlays;
+  // the subtitle is an editorial caption — always meaningfully smaller than the
+  // title (its final size is fit to the space below, further down).
+  let titlePx    = mode === 'panel'
+    ? Math.max(34, Math.min(canvasMin * 0.145, 150))
+    : Math.max(32, Math.min(canvasMin * 0.094, 92));
+  let subtitlePx = 0; // resolved by fitting, once the title box is known.
+  let ctaPx      = Math.max(18, Math.min(canvasMin * 0.046, 40));
+  const logoHeightPx = Math.max(26, Math.min(canvasMin * 0.05, 56));
 
-  // Title fit check.
   const titleLineH = 1.12;
-  const subLineH   = 1.35;
-  const reservedForWordmark = wordmarkPx * 1.2 + 24;
-  const reservedForSub = subcopy ? subtitlePx * subLineH * 2 + 18 : 0;
-  const reservedForCta = showCta ? ctaPx * 2.5 + 24 : 0;
-  const availableTitleHeight = panelHeightPx - padTopPx - padBottomPx
-                                - reservedForWordmark - reservedForSub - reservedForCta;
-  const titleText = normalizeCopyKeepingBreaks(copy);
-  const titleFit = fitFontExact({
+  const subLineH   = 1.4;
+
+  const titleText    = normalizeCopyKeepingBreaks(copy);
+  const subtitleText = subcopy ? normalizeCopyKeepingBreaks(subcopy) : '';
+
+  // --- Geometry: where the text lives, so we can fit the title to it. --------
+  let contentWidth, availableTitleHeight, padTopPx, padBottomPx, padSidePx;
+  const padRem = layout === 'portrait' ? 5 : 6;
+
+  if (mode === 'panel') {
+    // 50/50 split: text panel on the left, photo on the right.
+    const panelWidthPx = w * 0.5;
+    padTopPx = padRem * remPx;
+    padBottomPx = padRem * remPx;
+    padSidePx = padRem * remPx;
+    contentWidth = panelWidthPx - padSidePx * 2;
+    availableTitleHeight = h - padTopPx - padBottomPx;
+  } else {
+    // Full-bleed photo. Text sits in a column lifted off the bottom edge.
+    // IG Story gets extra top padding so a profile avatar won't clash.
+    padTopPx = isInstagramStory ? 180 : padRem * remPx;
+    // Lift the text block up from the bottom (bigger bottom margin).
+    padBottomPx = (isInstagramStory ? padRem * 2.4 : padRem * 1.6) * remPx;
+    padSidePx = padRem * remPx;
+    contentWidth = w - padSidePx * 2;
+    availableTitleHeight = h - padTopPx - padBottomPx;
+  }
+
+  // Reserve fixed chrome (logo + CTA) first; title and subtitle share the rest.
+  const reservedForLogo = showLogo ? logoHeightPx + 28 : 0;
+  const reservedForCta  = showCta ? ctaPx * 2.6 + 24 : 0;
+  // Campaign eyebrow above the title: tracked Suisse caps, left-aligned.
+  const badge = campaignBadge({
+    // A brand may give the badge a different look over photos (badge.overlay).
+    campaign: mode === 'overlay' && brand.campaign?.overlay
+      ? { ...brand.campaign, ...brand.campaign.overlay }
+      : brand.campaign,
+    fontFamily: brand.fontBody,
+    fontWeight: 600,
+    W: contentWidth,
+    maxPx: Math.max(13, Math.min(canvasMin * 0.034, 30)),
+    charRatio: 0.6,
+    tracking: 0.22,
+    radius: 999,
+  });
+  const badgeGapPx = Math.round(badge.px * 1.2);
+  const reservedForBadge = badge.heightPx ? badge.heightPx + badgeGapPx : 0;
+  const stackH = Math.max(
+    60,
+    availableTitleHeight - reservedForLogo - reservedForCta - reservedForBadge,
+  );
+
+  // Title width: panels use the full content width; overlays cap to keep
+  // measured editorial line lengths. The subtitle body wraps to the same width.
+  const titleWidth = mode === 'panel' ? contentWidth : contentWidth * 0.92;
+
+  // Subtitle: fit an editorial caption into at most ~45% of the stack, capped
+  // so it stays well below the title. Then reserve the exact height it wraps to.
+  let reservedForSub = 0;
+  if (subtitleText) {
+    const subMaxPx = Math.max(18, Math.min(titlePx * 0.6, canvasMin * 0.06, 58));
+    subtitlePx = fitFontExact({
+      text: subtitleText,
+      W: titleWidth,
+      H: stackH * 0.5,
+      charRatio: 0.5, // Suisse Intl
+      lineHeight: subLineH,
+      maxPx: subMaxPx,
+      minPx: 13,
+    });
+    const subLines = measureLines({
+      text: subtitleText, W: titleWidth, px: subtitlePx, charRatio: 0.5,
+    });
+    reservedForSub = subLines * subLineH * subtitlePx + Math.max(12, subtitlePx * 0.6);
+  }
+
+  const titleBoxH = Math.max(60, stackH - reservedForSub);
+
+  titlePx = fitFontExact({
     text: titleText,
-    W: titleContainerWidth,
-    H: Math.max(60, availableTitleHeight),
-    charRatio: 0.48, // Ogg italic is slightly narrower than Ogg roman
+    W: titleWidth,
+    H: titleBoxH,
+    charRatio: 0.5, // Ogg Roman
     lineHeight: titleLineH,
     maxPx: titlePx,
     minPx: 18,
   });
-  if (titleFit < titlePx) {
-    titlePx    = titleFit;
-    subtitlePx = Math.max(14, titlePx - 18);
-  }
 
-  const subtitleText = subcopy ? normalizeCopyKeepingBreaks(subcopy) : '';
+  // CTA pill must fit the content width. The label is uppercase with 0.12em
+  // letter-spacing (~0.12 extra per glyph) inside 1.7em horizontal padding each
+  // side, so budget ~0.74 per char plus the 3.4em of padding.
+  const ctaTextLen = (cta || '').length;
+  const maxCtaByWidth = ctaTextLen > 0
+    ? contentWidth / (ctaTextLen * 0.74 + 3.4)
+    : Infinity;
+  ctaPx = Math.max(13, Math.min(ctaPx, maxCtaByWidth));
+  const ctaPadVPx = ctaPx * 0.85;
+  const ctaPadHPx = ctaPx * 1.7;
+
+  // --- HTML fragments -------------------------------------------------------
   const subHtml = subtitleText
     ? `<p class="sub">${copyToHtml(subtitleText)}</p>`
     : '';
+  const ctaHtml = showCta ? `<a class="cta">${escapeHtml(cta)}</a>` : '';
+  const logoHtml = showLogo ? `<div class="logo">${logoSvg()}</div>` : '';
 
-  // CTA pill padding proportional to font for a balanced shape.
-  const ctaPadVPx = ctaPx * 0.85;
-  const ctaPadHPx = ctaPx * 1.6;
+  const titleColor    = mode === 'panel' ? colors.title : colors.titleOverlay;
+  const subtitleColor = mode === 'panel' ? colors.subtitle : colors.subtitleOverlay;
+  const logoColor     = mode === 'panel' ? colors.logo : colors.logoOverlay;
 
-  const ctaHtml = showCta
-    ? `<a class="cta">${escapeHtml(cta)}</a>`
-    : '';
-
-  const wordmarkText = brand.wordmark || brand.name || '';
-  const wordmarkHtml = wordmarkText
-    ? `<div class="wordmark">${escapeHtml(wordmarkText)}</div>`
-    : '';
-
-  const bodyCss = `
-    .root {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: ${panelStyles.axis};
-      font-family: ${brand.fontBody};
-      background: ${colors.bg};
-    }
-    .panel {
-      position: relative;
-      ${panelStyles.axis === 'row' ? `width: ${panelStyles.cross};` : `height: ${panelStyles.cross};`}
-      background: ${colors.bg};
-      padding: ${padTopPx}px ${padRightPx}px ${padBottomPx}px ${padLeftPx}px;
-      flex-shrink: 0;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 0;
-    }
-    .wordmark {
-      font-family: ${brand.fontTitle};
-      font-size: ${wordmarkPx}px;
-      font-weight: 500;
-      font-style: italic;
-      color: ${colors.wordmark};
-      letter-spacing: 0.005em;
-      line-height: 1;
-    }
+  // --- Shared CSS for type ---------------------------------------------------
+  const typeCss = `
+    .logo { color: ${logoColor}; line-height: 0; }
+    .logo svg { height: ${logoHeightPx}px; width: auto; display: block; }
     .text-block {
       display: flex;
       flex-direction: column;
-      gap: ${Math.max(10, Math.round(subtitlePx * 0.6))}px;
-      max-width: ${textWidthFraction * 100}%;
+      gap: ${Math.max(10, Math.round(subtitlePx * 0.55))}px;
     }
     .title {
       font-family: ${brand.fontTitle};
       font-size: ${titlePx}px;
       font-weight: ${brand.titleWeight ?? 400};
-      font-style: ${brand.titleStyle ?? 'italic'};
+      font-style: normal;
       line-height: ${titleLineH};
       letter-spacing: -0.005em;
-      color: ${colors.title};
+      color: ${titleColor};
       text-transform: ${brand.titleCase ?? 'none'};
       white-space: normal;
       overflow-wrap: normal;
@@ -164,11 +185,13 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       font-family: ${brand.fontBody};
       font-size: ${subtitlePx}px;
       font-weight: 400;
+      font-style: normal;
       line-height: ${subLineH};
-      color: ${colors.subtitle};
+      color: ${subtitleColor};
       margin: 0;
-      max-width: 90%;
     }
+    .campaign { margin-bottom: ${Math.max(0, badgeGapPx - Math.max(10, Math.round(subtitlePx * 0.55)))}px; }
+    ${badge.css}
     .cta {
       align-self: flex-start;
       background: ${colors.cta};
@@ -176,6 +199,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       font-family: ${brand.fontBody};
       font-size: ${ctaPx}px;
       font-weight: 600;
+      font-style: normal;
       padding: ${ctaPadVPx}px ${ctaPadHPx}px;
       border-radius: 999px;
       text-decoration: none;
@@ -185,44 +209,124 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       line-height: 1;
       white-space: nowrap;
     }
-    .image-area {
-      flex: 1 1 auto;
-      position: relative;
-      overflow: hidden;
-      min-width: 0;
-      min-height: 0;
-    }
-    .bg-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: ${focalX}% ${focalY}%;
-      transform: scale(${zoomScale});
-      transform-origin: ${focalX}% ${focalY}%;
-    }
-    .veil {
-      position: absolute; inset: 0;
-      background: linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0));
-      pointer-events: none;
-    }
   `;
 
-  const body = `
-    <div class="root">
-      <div class="panel">
-        ${wordmarkHtml}
-        <div class="text-block">
-          <h1 class="title">${copyToHtml(titleText)}</h1>
-          ${subHtml}
+  let bodyCss, body;
+
+  if (mode === 'panel') {
+    bodyCss = `
+      .root {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: row;
+        font-family: ${brand.fontBody};
+        background: ${colors.panelBg};
+      }
+      .panel {
+        position: relative;
+        width: 50%;
+        flex-shrink: 0;
+        background: ${colors.panelBg};
+        padding: ${padTopPx}px ${padSidePx}px ${padBottomPx}px ${padSidePx}px;
+        display: flex;
+        flex-direction: column;
+        justify-content: ${showLogo ? 'space-between' : 'center'};
+        gap: ${Math.round(subtitlePx * 0.8)}px;
+        overflow: hidden;
+      }
+      .image-area {
+        flex: 1 1 auto;
+        position: relative;
+        overflow: hidden;
+        min-width: 0; min-height: 0;
+      }
+      .bg-image {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        object-position: ${focalX}% ${focalY}%;
+        transform: scale(${zoomScale});
+        transform-origin: ${focalX}% ${focalY}%;
+      }
+      .veil { position: absolute; inset: 0; background: rgba(0,0,0,0.18); pointer-events: none; }
+      ${typeCss}
+    `;
+    body = `
+      <div class="root">
+        <div class="panel">
+          ${logoHtml}
+          <div class="text-block">
+            ${badge.html}
+            <h1 class="title">${copyToHtml(titleText)}</h1>
+            ${subHtml}
+          </div>
+          ${ctaHtml}
         </div>
-        ${ctaHtml}
+        <div class="image-area">
+          ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
+          ${veil ? `<div class="veil"></div>` : ''}
+        </div>
       </div>
-      <div class="image-area">
+    `;
+  } else {
+    // OVERLAY: photo fills the canvas; text is anchored bottom-left.
+    bodyCss = `
+      .root {
+        width: 100%; height: 100%;
+        position: relative;
+        font-family: ${brand.fontBody};
+        background: #000;
+        overflow: hidden;
+      }
+      .bg-image {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        object-position: ${focalX}% ${focalY}%;
+        transform: scale(${zoomScale});
+        transform-origin: ${focalX}% ${focalY}%;
+      }
+      .scrim {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top,
+          ${colors.overlayScrim || 'rgba(0,0,0,0.50)'} 0%,
+          rgba(0,0,0,0.18) 38%,
+          rgba(0,0,0,0.00) 70%);
+        pointer-events: none;
+      }
+      .veil { position: absolute; inset: 0; background: rgba(0,0,0,0.22); pointer-events: none; }
+      .content {
+        position: absolute; inset: 0;
+        padding: ${padTopPx}px ${padSidePx}px ${padBottomPx}px ${padSidePx}px;
+        display: flex;
+        flex-direction: column;
+      }
+      .bottom {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: ${Math.round(subtitlePx * 0.8)}px;
+        max-width: 92%;
+      }
+      ${typeCss}
+    `;
+    body = `
+      <div class="root">
         ${imageUrl ? `<img class="bg-image" src="${escapeHtml(imageUrl)}" alt="">` : ''}
+        <div class="scrim"></div>
         ${veil ? `<div class="veil"></div>` : ''}
+        <div class="content">
+          ${logoHtml}
+          <div class="bottom">
+            <div class="text-block">
+              ${badge.html}
+              <h1 class="title">${copyToHtml(titleText)}</h1>
+              ${subHtml}
+            </div>
+            ${ctaHtml}
+          </div>
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 
   return htmlDocument({ w, h, bodyCss, body, baseUrl });
 }
