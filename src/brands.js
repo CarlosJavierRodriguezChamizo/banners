@@ -15,29 +15,25 @@ const BRANDS = {
     },
     titleWeight: 500,
     titleCase: 'none',
-    // Seasonal skins (src/campaigns.js). Black Friday swaps the navy for black
-    // and keeps the brand's light blue as the accent; Cyber Monday goes to a
-    // saturated electric navy with a cyan outline badge.
+    // Seasonal skins (src/campaigns.js). Both keep the Decorabaño navy + light
+    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js):
+    // an editorial header lockup instead of a pill, and a bold tape across the
+    // mosaic. Cyber Monday adds a navy pixel dissolve over the photos.
+    campaignFields: ['images'],
     campaigns: {
       'black-friday': {
-        colors: { panel: '#0B0B0D', subtext: 'rgba(255,255,255,0.78)', cta: '#B6D8E5', ctaText: '#0B0B0D' },
-        badge: { bg: '#B6D8E5', fg: '#0B0B0D' },
-        // Fine light-blue stripes on the black panel + black tape across the
-        // photo's corner.
+        layout: 'mosaic',
+        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          pattern: { type: 'stripes', color: '#B6D8E5', opacity: 0.09 },
-          tape: { bg: '#0B0B0D', fg: '#B6D8E5' },
+          tape: { bg: '#B6D8E5', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
         },
       },
       'cyber-monday': {
-        colors: { panel: '#0A1F5C', cta: '#5CE1FF', ctaText: '#0A1F5C' },
-        badge: { border: '#5CE1FF', fg: '#5CE1FF' },
-        // The panel "dissolves" into the photo in pixels, plus a dot grid on
-        // the panel and a navy seal with a cyan text ring.
+        layout: 'mosaic',
+        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          pattern: { type: 'dots', color: '#5CE1FF', opacity: 0.22, fade: 'seam' },
-          seam: { type: 'pixels', color: '#0A1F5C', opacity: 1 },
-          sticker: { shape: 'circle', bg: '#0A1F5C', fg: '#5CE1FF', stroke: '#5CE1FF' },
+          tape: { bg: '#FFFFFF', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
+          seam: { type: 'pixels', color: '#0F2A47', opacity: 1, cell: 0.05 },
         },
       },
     },
@@ -55,29 +51,25 @@ const BRANDS = {
     },
     titleWeight: 500,
     titleCase: 'none',
-    // Seasonal skins (src/campaigns.js). Black Friday swaps the navy for black
-    // and keeps the brand's light blue as the accent; Cyber Monday goes to a
-    // saturated electric navy with a cyan outline badge.
+    // Seasonal skins (src/campaigns.js). Both keep the Decorabaño navy + light
+    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js):
+    // an editorial header lockup instead of a pill, and a bold tape across the
+    // mosaic. Cyber Monday adds a navy pixel dissolve over the photos.
+    campaignFields: ['images'],
     campaigns: {
       'black-friday': {
-        colors: { panel: '#0B0B0D', subtext: 'rgba(255,255,255,0.78)', cta: '#B6D8E5', ctaText: '#0B0B0D' },
-        badge: { bg: '#B6D8E5', fg: '#0B0B0D' },
-        // Fine light-blue stripes on the black panel + black tape across the
-        // photo's corner.
+        layout: 'mosaic',
+        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          pattern: { type: 'stripes', color: '#B6D8E5', opacity: 0.09 },
-          tape: { bg: '#0B0B0D', fg: '#B6D8E5' },
+          tape: { bg: '#B6D8E5', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
         },
       },
       'cyber-monday': {
-        colors: { panel: '#0A1F5C', cta: '#5CE1FF', ctaText: '#0A1F5C' },
-        badge: { border: '#5CE1FF', fg: '#5CE1FF' },
-        // The panel "dissolves" into the photo in pixels, plus a dot grid on
-        // the panel and a navy seal with a cyan text ring.
+        layout: 'mosaic',
+        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          pattern: { type: 'dots', color: '#5CE1FF', opacity: 0.22, fade: 'seam' },
-          seam: { type: 'pixels', color: '#0A1F5C', opacity: 1 },
-          sticker: { shape: 'circle', bg: '#0A1F5C', fg: '#5CE1FF', stroke: '#5CE1FF' },
+          tape: { bg: '#FFFFFF', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
+          seam: { type: 'pixels', color: '#0F2A47', opacity: 1, cell: 0.05 },
         },
       },
     },
@@ -98,23 +90,25 @@ const BRANDS = {
     },
     titleWeight: 800,
     titleCase: 'uppercase',
-    // Seasonal skins (src/campaigns.js). Black Friday turns the blue tags black
-    // with the brand orange as badge + CTA; Cyber Monday uses deep navy tags
-    // with an electric cyan badge.
+    // Seasonal skins (src/campaigns.js): retail promo layout
+    // (src/templates/commercial.js) — white headline with *highlighted* words,
+    // solid label tab, optional price card, warning tape. Black Friday in
+    // black + brand orange, Cyber Monday in navy + cyan.
+    campaignFields: ['product'],
     campaigns: {
       'black-friday': {
-        colors: { tagBg: '#0A0A0A', tagBgAlpha: 'rgba(10,10,10,0.88)' },
+        layout: 'commercial',
+        colors: { accent: '#F26B2A', onAccent: '#FFFFFF' },
         badge: { bg: '#F26B2A', fg: '#FFFFFF' },
-        // Black warning tape across the corner + an orange price tag.
         decor: {
           tape: { bg: '#0A0A0A', fg: '#F26B2A' },
           sticker: { shape: 'tag', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -14 },
         },
       },
       'cyber-monday': {
-        colors: { tagBg: '#0E204A', tagBgAlpha: 'rgba(14,32,74,0.90)' },
+        layout: 'commercial',
+        colors: { accent: '#2CC8F2', onAccent: '#0E204A' },
         badge: { bg: '#2CC8F2', fg: '#0E204A' },
-        // Cyan tape + a pixelated "digital" sticker.
         decor: {
           tape: { bg: '#2CC8F2', fg: '#0E204A', double: true },
           sticker: { shape: 'pixel', bg: '#0E204A', fg: '#2CC8F2', rotate: 0 },
@@ -135,23 +129,25 @@ const BRANDS = {
     },
     titleWeight: 800,
     titleCase: 'uppercase',
-    // Seasonal skins (src/campaigns.js). Black Friday turns the blue tags black
-    // with the brand orange as badge + CTA; Cyber Monday uses deep navy tags
-    // with an electric cyan badge.
+    // Seasonal skins (src/campaigns.js): retail promo layout
+    // (src/templates/commercial.js) — white headline with *highlighted* words,
+    // solid label tab, optional price card, warning tape. Black Friday in
+    // black + brand orange, Cyber Monday in navy + cyan.
+    campaignFields: ['product'],
     campaigns: {
       'black-friday': {
-        colors: { tagBg: '#0A0A0A', tagBgAlpha: 'rgba(10,10,10,0.88)' },
+        layout: 'commercial',
+        colors: { accent: '#F26B2A', onAccent: '#FFFFFF' },
         badge: { bg: '#F26B2A', fg: '#FFFFFF' },
-        // Black warning tape across the corner + an orange price tag.
         decor: {
           tape: { bg: '#0A0A0A', fg: '#F26B2A' },
           sticker: { shape: 'tag', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -14 },
         },
       },
       'cyber-monday': {
-        colors: { tagBg: '#0E204A', tagBgAlpha: 'rgba(14,32,74,0.90)' },
+        layout: 'commercial',
+        colors: { accent: '#2CC8F2', onAccent: '#0E204A' },
         badge: { bg: '#2CC8F2', fg: '#0E204A' },
-        // Cyan tape + a pixelated "digital" sticker.
         decor: {
           tape: { bg: '#2CC8F2', fg: '#0E204A', double: true },
           sticker: { shape: 'pixel', bg: '#0E204A', fg: '#2CC8F2', rotate: 0 },
@@ -195,35 +191,26 @@ const BRANDS = {
     },
     titleWeight: 400,
     titleCase: 'none',
-    // Seasonal skins (src/campaigns.js). The ghost CTA becomes a filled yellow
-    // button for urgency. Black Friday darkens the scrim to near-black (yellow
-    // on black) with a hairline-flanked eyebrow; Cyber Monday keeps the brand
-    // green with a sage pill eyebrow.
+    // Seasonal skins (src/campaigns.js): luminous lifestyle layout
+    // (src/templates/inspire.js) — bright photo, short serif stack at the top
+    // in warm white, a small seal bottom-right, optional vertical legal copy.
+    campaignFields: ['legal'],
     campaigns: {
       'black-friday': {
-        colors: {
-          overlayScrim: 'rgba(8,10,10,0.68)', overlayScrimSoft: 'rgba(8,10,10,0.30)',
-          overlayBg: '#0E0F0F', ctaFill: '#FBEC80', ctaFillText: '#141414',
-        },
-        badge: { fg: '#FBEC80', rule: true },
-        // Black seal with a yellow text ring.
+        layout: 'inspire',
+        badge: { fg: '#FFFDF6', rule: true },
         decor: {
           sticker: {
-            shape: 'circle', bg: 'rgba(14,15,15,0.88)', fg: '#FBEC80', stroke: '#FBEC80',
+            shape: 'circle', bg: '#FBEC80', fg: '#1B1B1B', ringFg: '#1B1B1B',
             font: '"Suisse Intl", Arial, sans-serif', numFont: 'Ogg, Georgia, serif', weight: 400,
           },
         },
       },
       'cyber-monday': {
-        colors: {
-          overlayScrim: 'rgba(27,38,37,0.66)', overlayScrimSoft: 'rgba(27,38,37,0.26)',
-          ctaFill: '#FBEC80', ctaFillText: '#2C403F',
-        },
-        badge: { bg: '#A6B9A5', fg: '#2C403F' },
-        // Sage concentric arcs from two corners (echoes the brand's line
-        // pattern) + a scalloped sage sticker.
+        layout: 'inspire',
+        badge: { bg: 'rgba(166,185,165,0.92)', fg: '#2C403F' },
         decor: {
-          pattern: { type: 'arches', color: '#A6B9A5', opacity: 0.7, corners: ['tl', 'br'], radius: 0.38 },
+          pattern: { type: 'arches', color: '#FFFDF6', opacity: 0.45, corners: ['bl'], radius: 0.36 },
           sticker: {
             shape: 'scallop', bg: '#A6B9A5', fg: '#2C403F',
             font: '"Suisse Intl", Arial, sans-serif', numFont: 'Ogg, Georgia, serif', weight: 400,

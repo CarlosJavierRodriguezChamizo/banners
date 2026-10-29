@@ -67,7 +67,9 @@ function campaignSuffix(campaign) {
 // Serve catalog (brands + formats) to the frontend. Formats are brand-aware:
 // each brand gets the shared social formats plus its own website banner sizes.
 app.get('/api/catalog', (_req, res) => {
-  const brands = Object.entries(BRANDS).map(([id, b]) => ({ id, name: b.name, style: b.style }));
+  const brands = Object.entries(BRANDS).map(([id, b]) => ({
+    id, name: b.name, style: b.style, campaignFields: b.campaignFields || [],
+  }));
   const formatsByBrand = {};
   for (const { id } of brands) formatsByBrand[id] = allFormats(id);
   const campaigns = Object.entries(CAMPAIGNS).map(([id, c]) => ({ id, name: c.name }));
@@ -86,7 +88,9 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 // HTML preview for one format (used by the iframe in the UI)
 app.post('/api/preview-html', (req, res) => {
   try {
-    const { brandId, campaign, discount, copy, subcopy, cta, imageUrl, focal, veil, zoom, format } = req.body;
+    const {
+      brandId, campaign, discount, copy, subcopy, cta, imageUrl, images, product, legal, focal, veil, zoom, format,
+    } = req.body;
     if (!brandId || !format?.w || !format?.h) {
       return res.status(400).json({ error: 'Missing brandId or format' });
     }
@@ -94,6 +98,9 @@ app.post('/api/preview-html', (req, res) => {
       brandId,
       campaign,
       discount,
+      images: Array.isArray(images) ? images : [],
+      product: product || {},
+      legal: legal ?? '',
       copy: copy ?? '',
       subcopy: subcopy ?? '',
       cta: cta ?? '',
@@ -114,7 +121,7 @@ app.post('/api/preview-html', (req, res) => {
 
 // Generate the full ZIP
 app.post('/api/generate', async (req, res) => {
-  const { brandId, campaign, discount, copy, subcopy, cta, imageUrl, perFormat } = req.body;
+  const { brandId, campaign, discount, copy, subcopy, cta, imageUrl, images, product, legal, perFormat } = req.body;
   if (!brandId) return res.status(400).json({ error: 'brandId required' });
   if (!imageUrl) return res.status(400).json({ error: 'imageUrl required (upload first)' });
 
@@ -143,6 +150,9 @@ app.post('/api/generate', async (req, res) => {
         brandId,
         campaign,
         discount,
+        images: Array.isArray(images) ? images : [],
+        product: product || {},
+        legal: legal ?? '',
         copy: copy ?? '',
         subcopy: subcopy ?? '',
         cta: cta ?? '',

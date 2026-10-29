@@ -236,3 +236,10 @@ button.secondary:hover { background: #f0f0f0; }
 .campaign-options label.row { cursor: pointer; margin: 0; }
 #discount-row { margin-top: 10px; }
 #discount-row[hidden] { display: none; }
+
+.campaign-extra { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.campaign-extra[hidden] { display: none; }
+.campaign-extra .field-title { font-size: 13px; }
+.campaign-extra input[type="text"] { width: 100%; }
+.price-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#images-clear[hidden] { display: none; }

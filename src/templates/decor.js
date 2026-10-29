@@ -158,7 +158,7 @@ function tape({ cfg, campaign, w, h, font }) {
   const qx = w - k * 1.7, qy = h;      // where it leaves the bottom edge
   const cx = (px + qx) / 2, cy = (py + qy) / 2;
   const angle = (Math.atan2(py - qy, px - qx) * 180) / Math.PI;
-  const t = Math.min(w, h) * 0.085;    // band thickness
+  const t = Math.min(w, h) * (cfg.thick || 0.085); // band thickness
   const L = Math.hypot(w, h) * 1.2;
   const fs = t * 0.46;
   const unit = `${String(campaign.label).toUpperCase()}  •  `;
@@ -172,7 +172,7 @@ function tape({ cfg, campaign, w, h, font }) {
       ${second}
       <rect x="${-L / 2}" y="${r2(-t / 2)}" width="${L}" height="${r2(t)}" fill="${cfg.bg}"/>
       ${edge(-t / 2 + t * 0.12)}${edge(t / 2 - t * 0.12)}
-      <text x="${-L / 2}" y="0" dominant-baseline="central" font-family="${escapeHtml(font)}" font-weight="800" font-size="${r2(fs)}" letter-spacing="0.08em" fill="${cfg.fg}" xml:space="preserve">${escapeHtml(unit.repeat(reps))}</text>
+      <text x="${-L / 2}" y="0" dominant-baseline="central" font-family="${escapeHtml(font)}" font-weight="${cfg.weight || 800}" font-size="${r2(fs)}" letter-spacing="0.08em" fill="${cfg.fg}" xml:space="preserve">${escapeHtml(unit.repeat(reps))}</text>
     </g>
   </svg>`;
 }

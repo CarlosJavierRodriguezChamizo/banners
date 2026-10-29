@@ -123,6 +123,7 @@ function campaignBadge({
   charRatio = 0.62, tracking = 0.14, align = 'start', radius = 0,
 }) {
   if (!campaign?.text) return { html: '', css: '', heightPx: 0, px: 0 };
+  if (campaign.line) return lineBadge({ campaign, fontFamily, fontWeight, W, maxPx, minPx });
   const text = String(campaign.text).toUpperCase();
   const boxed = !!(campaign.bg || campaign.border);
   const padVEm = boxed ? 0.55 : 0;
@@ -167,6 +168,42 @@ function campaignBadge({
   `;
   const html = `<div class="campaign">${rules === 2 ? rule : ''}<span class="campaign-text">${escapeHtml(text)}</span>${rules ? rule : ''}</div>`;
   return { html, css, heightPx, px };
+}
+
+// Editorial header lockup: "Black Friday ———————— Hasta −40%". Sentence case,
+// the hairline stretches to fill the column so the label reads as a section
+// header rather than a sticker. `extraFg` colors the discount.
+function lineBadge({ campaign, fontFamily, fontWeight, W, maxPx, minPx }) {
+  const label = String(campaign.label || campaign.text);
+  const extra = String(campaign.discount || '').replace(/-(?=\d)/, '−');
+  const chars = label.length + extra.length;
+  const px = Math.round(Math.max(minPx, Math.min(maxPx * 1.25, W / (chars * 0.56 + 4))));
+  const css = `
+    .campaign {
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      align-self: stretch;
+      font-family: ${fontFamily};
+      font-size: ${px}px;
+      font-weight: ${fontWeight};
+      line-height: 1.2;
+      letter-spacing: 0.005em;
+      white-space: nowrap;
+      color: ${campaign.fg || 'currentColor'};
+      flex-shrink: 0;
+    }
+    .campaign-fill {
+      flex: 1 1 auto;
+      min-width: 1.5em;
+      height: ${Math.max(1, Math.round(px * 0.06))}px;
+      background: currentColor;
+      opacity: 0.55;
+    }
+    .campaign-extra { color: ${campaign.extraFg || campaign.fg || 'currentColor'}; }
+  `;
+  const html = `<div class="campaign"><span>${escapeHtml(label)}</span><span class="campaign-fill"></span>${extra ? `<span class="campaign-extra">${escapeHtml(extra)}</span>` : ''}</div>`;
+  return { html, css, heightPx: px * 1.2, px };
 }
 
 // Build the @font-face block. Filenames match exactly what's in /fonts/<family>/.

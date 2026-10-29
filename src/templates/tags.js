@@ -27,7 +27,9 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
 
   const colors = brand.colors;
   // Continuous text with optional explicit \n preserved as hard breaks.
-  const titleText = normalizeCopyKeepingBreaks(copy);
+  // *word* marks a highlight for the campaign layout (commercial.js); the
+  // generic tag look has no highlight, so drop the markers.
+  const titleText = normalizeCopyKeepingBreaks(copy).replace(/\*/g, '');
 
   // Format-specific behavior
   const isGoogleOrFB = w === 1200 && (h === 628 || h === 630);
@@ -273,4 +275,4 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   return htmlDocument({ w, h, bodyCss, body, baseUrl });
 }
 
-module.exports = { render };
+module.exports = { render, SWOOSH_PATH, SWOOSH_VIEWBOX, SWOOSH_ASPECT };

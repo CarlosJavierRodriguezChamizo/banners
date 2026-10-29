@@ -29,6 +29,20 @@
           <input id="discount" type="text" placeholder="Hasta -40%">
           <span class="hint">Se añade a la etiqueta de campaña: «Black Friday · Hasta -40%».</span>
         </label>
+        <div id="product-row" class="campaign-extra" hidden>
+          <span class="field-title">Producto destacado (opcional)</span>
+          <input id="product-name" type="text" placeholder="Mampara Kioto">
+          <input id="product-desc" type="text" placeholder="Corredera, perfil negro mate">
+          <div class="price-pair">
+            <input id="product-old" type="text" placeholder="Antes: 399,00€">
+            <input id="product-price" type="text" placeholder="Ahora: 239,40€">
+          </div>
+          <span class="hint">Con precio se muestra la ficha de producto. En el titular, *palabra* entre asteriscos se resalta.</span>
+        </div>
+        <label id="legal-row" class="campaign-extra" hidden>Texto legal (opcional)
+          <textarea id="legal" rows="2" placeholder="*Promoción válida del 24 al 30 de noviembre…"></textarea>
+          <span class="hint">Aparece en vertical en el borde derecho.</span>
+        </label>
       </section>
 
       <section class="card">
@@ -49,6 +63,12 @@
         <h2>4. Imagen</h2>
         <input id="image-input" type="file" accept="image/*">
         <div id="image-status" class="hint">Sube una imagen (JPG/PNG).</div>
+        <div id="images-row" class="campaign-extra" hidden>
+          <span class="field-title">Más productos (multiproducto, hasta 4)</span>
+          <input id="images-input" type="file" accept="image/*" multiple>
+          <div id="images-status" class="hint">En campaña se monta un mosaico con la imagen principal y estas.</div>
+          <button id="images-clear" class="secondary" type="button" hidden>Quitar imágenes extra</button>
+        </div>
       </section>
 
       <section class="card">

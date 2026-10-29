@@ -2,6 +2,10 @@ const state = {
   brandId: 'decorabano',
   campaign: 'generic', // generic | black-friday | cyber-monday
   discount: '',
+  images: [],      // extra product photos for the multiproduct mosaic
+  product: { name: '', desc: '', oldPrice: '', price: '' },
+  legal: '',
+  brands: [],
   copy: 'Tu baño no se va a reformar solo, confía en los expertos',
   subcopy: '',
   cta: 'Quiero reformar mi baño',
@@ -27,6 +31,7 @@ async function init() {
   brandSelect.value = state.brandId;
   brandSelect.addEventListener('change', () => {
     state.brandId = brandSelect.value;
+    updateCampaignFields();
     setFormatsForBrand();
     refreshAllPreviews();
     updateGenerateBtn();
@@ -44,6 +49,7 @@ async function init() {
     radio.addEventListener('change', () => {
       state.campaign = radio.value;
       discountRow.hidden = state.campaign === 'generic';
+      updateCampaignFields();
       refreshAllPreviews();
     });
     campaignBox.appendChild(label);
@@ -51,6 +57,26 @@ async function init() {
   discountRow.hidden = state.campaign === 'generic';
   const discountEl = document.getElementById('discount');
   discountEl.addEventListener('input', debounce(() => { state.discount = discountEl.value; refreshAllPreviews(); }, 250));
+
+  // Brand-specific campaign fields (product card, legal copy, extra photos).
+  state.brands = catalog.brands;
+  const bindText = (id, set) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', debounce(() => { set(el.value); refreshAllPreviews(); }, 250));
+  };
+  bindText('product-name', (v) => { state.product.name = v; });
+  bindText('product-desc', (v) => { state.product.desc = v; });
+  bindText('product-old', (v) => { state.product.oldPrice = v; });
+  bindText('product-price', (v) => { state.product.price = v; });
+  bindText('legal', (v) => { state.legal = v; });
+  document.getElementById('images-input').addEventListener('change', onImagesUpload);
+  document.getElementById('images-clear').addEventListener('click', () => {
+    state.images = [];
+    document.getElementById('images-input').value = '';
+    updateImagesStatus();
+    refreshAllPreviews();
+  });
+  updateCampaignFields();
 
   // Bind text inputs
   const copyEl = document.getElementById('copy');
@@ -212,6 +238,45 @@ async function onImageUpload(e) {
   }
 }
 
+// Show only the campaign fields the selected brand's campaign layout uses.
+function updateCampaignFields() {
+  const brand = state.brands.find((b) => b.id === state.brandId);
+  const fields = state.campaign === 'generic' ? [] : (brand?.campaignFields || []);
+  document.getElementById('product-row').hidden = !fields.includes('product');
+  document.getElementById('legal-row').hidden = !fields.includes('legal');
+  document.getElementById('images-row').hidden = !fields.includes('images');
+}
+
+async function onImagesUpload(e) {
+  const files = [...(e.target.files || [])].slice(0, 4);
+  if (!files.length) return;
+  const statusEl = document.getElementById('images-status');
+  statusEl.textContent = 'Subiendo…';
+  try {
+    const urls = [];
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('image', file);
+      const r = await fetch('/api/upload', { method: 'POST', body: fd }).then((res) => res.json());
+      if (r.error) throw new Error(r.error);
+      urls.push(r.url);
+    }
+    state.images = urls;
+    updateImagesStatus();
+    refreshAllPreviews();
+  } catch (err) {
+    statusEl.textContent = `Error: ${err.message}`;
+  }
+}
+
+function updateImagesStatus() {
+  const n = state.images.length;
+  document.getElementById('images-status').textContent = n
+    ? `${n} imagen${n > 1 ? 'es' : ''} extra lista${n > 1 ? 's' : ''} para el mosaico.`
+    : 'En campaña se monta un mosaico con la imagen principal y estas.';
+  document.getElementById('images-clear').hidden = !n;
+}
+
 async function refreshPreview(formatId) {
   const f = state.formats.find((x) => x.id === formatId);
   if (!f) return;
@@ -228,6 +293,9 @@ async function refreshPreview(formatId) {
         brandId: state.brandId,
         campaign: state.campaign,
         discount: state.discount,
+        images: state.images,
+        product: state.product,
+        legal: state.legal,
         copy: state.copy,
         subcopy: state.subcopy,
         cta: state.cta,
@@ -268,6 +336,9 @@ async function onGenerate() {
         brandId: state.brandId,
         campaign: state.campaign,
         discount: state.discount,
+        images: state.images,
+        product: state.product,
+        legal: state.legal,
         copy: state.copy,
         subcopy: state.subcopy,
         cta: state.cta,
