@@ -72,7 +72,7 @@ app.get('/api/catalog', (_req, res) => {
   }));
   const formatsByBrand = {};
   for (const { id } of brands) formatsByBrand[id] = allFormats(id);
-  const campaigns = Object.entries(CAMPAIGNS).map(([id, c]) => ({ id, name: c.name }));
+  const campaigns = Object.entries(CAMPAIGNS).map(([id, c]) => ({ id, name: c.name, label: c.label }));
   res.json({ brands, campaigns, formats: FORMATS, formatsByBrand });
 });
 
@@ -89,7 +89,8 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
 app.post('/api/preview-html', (req, res) => {
   try {
     const {
-      brandId, campaign, discount, copy, subcopy, cta, imageUrl, images, product, legal, focal, veil, zoom, format,
+      brandId, campaign, discount, campaignLabel, copy, subcopy, cta, imageUrl, images, product, legal,
+      focal, veil, zoom, format,
     } = req.body;
     if (!brandId || !format?.w || !format?.h) {
       return res.status(400).json({ error: 'Missing brandId or format' });
@@ -98,6 +99,7 @@ app.post('/api/preview-html', (req, res) => {
       brandId,
       campaign,
       discount,
+      campaignLabel,
       images: Array.isArray(images) ? images : [],
       product: product || {},
       legal: legal ?? '',
@@ -121,7 +123,9 @@ app.post('/api/preview-html', (req, res) => {
 
 // Generate the full ZIP
 app.post('/api/generate', async (req, res) => {
-  const { brandId, campaign, discount, copy, subcopy, cta, imageUrl, images, product, legal, perFormat } = req.body;
+  const {
+    brandId, campaign, discount, campaignLabel, copy, subcopy, cta, imageUrl, images, product, legal, perFormat,
+  } = req.body;
   if (!brandId) return res.status(400).json({ error: 'brandId required' });
   if (!imageUrl) return res.status(400).json({ error: 'imageUrl required (upload first)' });
 
@@ -150,6 +154,7 @@ app.post('/api/generate', async (req, res) => {
         brandId,
         campaign,
         discount,
+        campaignLabel,
         images: Array.isArray(images) ? images : [],
         product: product || {},
         legal: legal ?? '',

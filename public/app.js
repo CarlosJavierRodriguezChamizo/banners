@@ -2,6 +2,8 @@ const state = {
   brandId: 'decorabano',
   campaign: 'generic', // generic | black-friday | cyber-monday
   discount: '',
+  campaignLabel: '', // prefilled with the campaign name; empty = no label drawn
+  labelEdited: false, // once the user types, switching campaign keeps their text
   images: [],      // extra product photos for the multiproduct mosaic
   product: { name: '', desc: '', oldPrice: '', price: '' },
   legal: '',
@@ -15,7 +17,18 @@ const state = {
   formatsByBrand: {},
 };
 
-const PREVIEW_WIDTH = 320; // px shown on screen for each format card
+// Previews scale to their card's real width (cards are responsive), so the
+// banner always fills the preview edge to edge.
+const previewObserver = new ResizeObserver((entries) => {
+  for (const { target } of entries) fitPreview(target);
+});
+
+function fitPreview(wrap) {
+  const iframe = wrap.querySelector('iframe');
+  const w = Number(iframe.dataset.w);
+  if (!w || !wrap.clientWidth) return;
+  iframe.style.transform = `scale(${wrap.clientWidth / w})`;
+}
 
 async function init() {
   const catalog = await fetch('/api/catalog').then((r) => r.json());
@@ -40,6 +53,7 @@ async function init() {
   // Campaign selector (one radio per campaign) + optional discount label.
   const campaignBox = document.getElementById('campaign-options');
   const discountRow = document.getElementById('discount-row');
+  const labelRow = document.getElementById('campaign-label-row');
   for (const c of catalog.campaigns) {
     const label = document.createElement('label');
     label.className = 'row';
@@ -48,13 +62,25 @@ async function init() {
     radio.checked = c.id === state.campaign;
     radio.addEventListener('change', () => {
       state.campaign = radio.value;
+      if (!state.labelEdited) {
+        state.campaignLabel = c.label || '';
+        document.getElementById('campaign-label').value = state.campaignLabel;
+      }
       discountRow.hidden = state.campaign === 'generic';
+      labelRow.hidden = state.campaign === 'generic';
       updateCampaignFields();
       refreshAllPreviews();
     });
     campaignBox.appendChild(label);
   }
   discountRow.hidden = state.campaign === 'generic';
+  labelRow.hidden = state.campaign === 'generic';
+  const labelEl = document.getElementById('campaign-label');
+  labelEl.addEventListener('input', debounce(() => {
+    state.campaignLabel = labelEl.value;
+    state.labelEdited = true;
+    refreshAllPreviews();
+  }, 250));
   const discountEl = document.getElementById('discount');
   discountEl.addEventListener('input', debounce(() => { state.discount = discountEl.value; refreshAllPreviews(); }, 250));
 
@@ -141,15 +167,11 @@ function setFormatsForBrand() {
 function renderFormatGrid() {
   const grid = document.getElementById('format-grid');
   grid.innerHTML = '';
+  previewObserver.disconnect();
   for (const f of state.formats) {
     const card = document.createElement('div');
     card.className = 'format-card';
     card.dataset.formatId = f.id;
-
-    const aspect = f.w / f.h;
-    const previewW = PREVIEW_WIDTH;
-    const previewH = Math.round(previewW / aspect);
-    const scale = previewW / f.w;
 
     // Text-only deliverables carry no photo, so hide the image controls.
     const isText = f.part === 'text';
@@ -175,9 +197,9 @@ function renderFormatGrid() {
         <strong>${f.w} × ${f.h}</strong>
         <span class="platform">${badge}</span>
       </header>
-      <div class="preview-wrap" style="height:${previewH}px;" data-id="${f.id}">
-        <iframe class="preview-frame"
-          style="width:${f.w}px; height:${f.h}px; transform: scale(${scale});"
+      <div class="preview-wrap" style="aspect-ratio:${f.w} / ${f.h};" data-id="${f.id}">
+        <iframe class="preview-frame" data-w="${f.w}"
+          style="width:${f.w}px; height:${f.h}px;"
           sandbox="allow-same-origin"></iframe>
         ${isText ? '' : '<div class="focal-dot" style="left:50%; top:50%;"></div>'}
         ${isText ? '' : '<div class="focal-empty">Sube una imagen para empezar</div>'}
@@ -185,6 +207,9 @@ function renderFormatGrid() {
       ${imageControls}
     `;
     grid.appendChild(card);
+    const previewWrap = card.querySelector('.preview-wrap');
+    fitPreview(previewWrap);
+    previewObserver.observe(previewWrap);
 
     if (isText) continue;
 
@@ -293,6 +318,7 @@ async function refreshPreview(formatId) {
         brandId: state.brandId,
         campaign: state.campaign,
         discount: state.discount,
+        campaignLabel: state.campaignLabel,
         images: state.images,
         product: state.product,
         legal: state.legal,
@@ -336,6 +362,7 @@ async function onGenerate() {
         brandId: state.brandId,
         campaign: state.campaign,
         discount: state.discount,
+        campaignLabel: state.campaignLabel,
         images: state.images,
         product: state.product,
         legal: state.legal,

@@ -243,3 +243,4 @@ button.secondary:hover { background: #f0f0f0; }
 .campaign-extra input[type="text"] { width: 100%; }
 .price-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 #images-clear[hidden] { display: none; }
+#campaign-label-row[hidden] { display: none; }

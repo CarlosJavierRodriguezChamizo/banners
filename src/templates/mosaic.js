@@ -2,11 +2,12 @@
 //
 // A text zone in the brand navy (header lockup, title, subtitle, CTA) next to
 // a mosaic of 2–5 product photos separated by thin navy gutters — the
-// catalogue-page look, rather than one hero photo. A bold tape crosses the
-// mosaic's corner.
+// catalogue-page look, rather than one hero photo. A brand may add a tape
+// across the mosaic's corner (decor.tape).
 //
-// Falls back to the classic panel template when there's only one image, and
-// for the text-only website deliverable. The image-only deliverable is the
+// With a single image the "mosaic" is one framed photo, so every campaign
+// format keeps the same structure. Falls back to the classic panel template
+// only without any image, and for the text-only website deliverable. The image-only deliverable is the
 // mosaic alone.
 
 const {
@@ -22,6 +23,7 @@ const MAX_IMAGES = 5;
 // 'a' is always the hero tile (the main image).
 function gridFor(n, zoneAspect) {
   const wideZone = zoneAspect > 1.15;
+  if (n === 1) return { areas: ['a'], cols: '1fr', rows: '1fr' };
   if (n === 2) {
     return wideZone
       ? { areas: ['a b'], cols: '1.25fr 1fr', rows: '1fr' }
@@ -72,7 +74,7 @@ function mosaicHtml({ images, focalX, focalY, zoomScale, zoneW, zoneH, gap }) {
 function render(args) {
   const { brand, copy, subcopy, cta, imageUrl, images = [], focal, zoom, format, baseUrl, part = 'full' } = args;
   const all = [imageUrl, ...images].filter(Boolean).slice(0, MAX_IMAGES);
-  if (part === 'text' || all.length < 2) return panel.render(args);
+  if (part === 'text' || all.length === 0) return panel.render(args);
 
   const { w, h } = format;
   const layout = layoutCategory(w, h);
@@ -109,7 +111,7 @@ function render(args) {
   const rowAxis = layout !== 'portrait';
   // Portrait feeds (4:5, 2:3) are short for a stacked band — give the copy more
   // room there; the Story is tall enough at a third.
-  const textFrac = layout === 'wide' ? 0.4 : layout === 'square' ? 0.43 : isInstagramStory ? 0.33 : 0.42;
+  const textFrac = layout === 'wide' ? 0.4 : layout === 'square' ? 0.5 : isInstagramStory ? 0.33 : 0.42;
   const padPx = Math.round(remPx * (layout === 'portrait' ? 5 : 5.5));
   const padTopPx = isInstagramStory ? Math.round(remPx * 13) : padPx;
   const textZone = rowAxis
@@ -128,9 +130,11 @@ function render(args) {
     fontFamily: brand.fontFamily,
     fontWeight: 500,
     W: textW,
-    maxPx: Math.max(14, Math.min(remPx * 3.2, 38)),
+    maxPx: Math.max(14, Math.min(remPx * 2.9, 34)),
   });
-  const badgeGapPx = Math.round(badge.px * 1.3);
+  // The header sits close to the title — it reads as its kicker, not as a
+  // separate block — with a little air in between.
+  const badgeGapPx = Math.round(badge.px * 0.9);
 
   const ctaPx = Math.max(18, Math.min(remPx * 3.7, 40));
   const ctaH = ctaPx * 2;
@@ -156,7 +160,7 @@ function render(args) {
   }
   const titlePx = fitFontExact({
     text: titleText, W: textW, H: Math.max(30, stackH - reservedSub), charRatio: titleCharRatio,
-    lineHeight: titleLineH, maxPx: Math.round(Math.min(remPx * 9, 110)), minPx: 16,
+    lineHeight: titleLineH, maxPx: Math.round(Math.min(remPx * (layout === 'square' ? 7.2 : 9), 110)), minPx: 16,
   });
 
   const m = mosaicHtml({
@@ -199,13 +203,10 @@ function render(args) {
       letter-spacing: -0.015em;
       color: ${colors.text};
     }
-    /* Light italic for the secondary line — the contrast pairing of the
-       reference (bold sans headline, quiet second voice). */
     .sub {
       margin-top: ${Math.round(subPx * 0.8)}px;
       font-size: ${subPx}px;
-      font-weight: 300;
-      font-style: italic;
+      font-weight: 400;
       line-height: ${subLineH};
       color: ${colors.subtext};
     }
@@ -232,7 +233,7 @@ function render(args) {
       <div class="text">
         <div class="copy">
           ${badge.html}
-          <h1 class="title">${copyToHtml(titleText)}</h1>
+          ${titleText ? `<h1 class="title">${copyToHtml(titleText)}</h1>` : ''}
           ${subText ? `<p class="sub">${copyToHtml(subText)}</p>` : ''}
         </div>
         ${showCta ? `<a class="cta">${escapeHtml(cta)}</a>` : ''}

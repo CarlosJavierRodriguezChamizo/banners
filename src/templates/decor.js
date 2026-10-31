@@ -17,10 +17,11 @@ function rng(seed) {
   };
 }
 
-// "Hasta -40%" → { pre: 'HASTA', lines: ['-40%'] }. Without a number the
-// sticker falls back to the campaign name stacked ("BLACK" / "FRIDAY").
+// "Hasta -40%" → { pre: 'HASTA', lines: ['-40%'] }. Text without a number is
+// stacked word by word ("ENVÍO" / "GRATIS"); no discount → no sticker (null).
 function stickerCopy(campaign) {
-  const discount = String(campaign.discount || '');
+  const discount = String(campaign.discount || '').trim();
+  if (!discount) return null;
   const m = discount.match(/[-–]?\s*\d+\s*%/);
   if (m) {
     return {
@@ -28,7 +29,7 @@ function stickerCopy(campaign) {
       lines: [m[0].replace(/\s+/g, '').replace('–', '-')],
     };
   }
-  return { pre: '', lines: String(campaign.label).toUpperCase().split(/\s+/) };
+  return { pre: '', lines: discount.toUpperCase().split(/\s+/).slice(0, 3) };
 }
 
 // Outline of the sticker in a -100..100 box.
@@ -80,10 +81,11 @@ function shapePath(shape) {
 // Round promo sticker: shape + optional text ring + discount in the centre.
 //   cfg: { shape, bg, fg, ring, ringFg, stroke, rotate, font, numFont, weight }
 function sticker({ cfg, campaign, size, left, top, right, bottom, id = 'stk' }) {
-  if (!cfg || size <= 0) return '';
-  const { pre, lines } = stickerCopy(campaign);
+  const copy = cfg && size > 0 ? stickerCopy(campaign) : null;
+  if (!copy) return '';
+  const { pre, lines } = copy;
   const fg = cfg.fg || '#fff';
-  const ring = cfg.ring !== false && cfg.shape !== 'pixel';
+  const ring = cfg.ring !== false && cfg.shape !== 'pixel' && !!campaign.label;
   const innerR = ring ? 60 : 68;
   // The tag's text sits right of the hole, in a shorter, wider box.
   const isTag = cfg.shape === 'tag';
@@ -152,7 +154,7 @@ function sticker({ cfg, campaign, size, left, top, right, bottom, id = 'stk' }) 
 // Diagonal tape band across the bottom-right corner with the campaign name on
 // repeat, like warning tape. k sets how far into the canvas the band reaches.
 function tape({ cfg, campaign, w, h, font }) {
-  if (!cfg) return '';
+  if (!cfg || !campaign?.label) return '';
   const k = Math.min(w, h) * (cfg.reach || 0.3);
   const px = w, py = h - k;            // where the band leaves the right edge
   const qx = w - k * 1.7, qy = h;      // where it leaves the bottom edge

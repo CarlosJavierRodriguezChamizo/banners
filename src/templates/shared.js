@@ -174,10 +174,10 @@ function campaignBadge({
 // the hairline stretches to fill the column so the label reads as a section
 // header rather than a sticker. `extraFg` colors the discount.
 function lineBadge({ campaign, fontFamily, fontWeight, W, maxPx, minPx }) {
-  const label = String(campaign.label || campaign.text);
+  const label = String(campaign.label || '');
   const extra = String(campaign.discount || '').replace(/-(?=\d)/, '−');
   const chars = label.length + extra.length;
-  const px = Math.round(Math.max(minPx, Math.min(maxPx * 1.25, W / (chars * 0.56 + 4))));
+  const px = Math.round(Math.max(minPx, Math.min(maxPx, W / (chars * 0.56 + 4))));
   const css = `
     .campaign {
       display: flex;
@@ -202,7 +202,10 @@ function lineBadge({ campaign, fontFamily, fontWeight, W, maxPx, minPx }) {
     }
     .campaign-extra { color: ${campaign.extraFg || campaign.fg || 'currentColor'}; }
   `;
-  const html = `<div class="campaign"><span>${escapeHtml(label)}</span><span class="campaign-fill"></span>${extra ? `<span class="campaign-extra">${escapeHtml(extra)}</span>` : ''}</div>`;
+  // `fill: false` drops the hairline; label and discount then sit at the two
+  // ends of the column.
+  const fill = campaign.fill === false ? '' : '<span class="campaign-fill"></span>';
+  const html = `<div class="campaign"${fill ? '' : ' style="justify-content:space-between"'}>${label ? `<span>${escapeHtml(label)}</span>` : ''}${label && extra ? fill : ''}${extra ? `<span class="campaign-extra">${escapeHtml(extra)}</span>` : ''}</div>`;
   return { html, css, heightPx: px * 1.2, px };
 }
 

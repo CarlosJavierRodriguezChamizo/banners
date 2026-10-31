@@ -16,23 +16,19 @@ const BRANDS = {
     titleWeight: 500,
     titleCase: 'none',
     // Seasonal skins (src/campaigns.js). Both keep the Decorabaño navy + light
-    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js):
-    // an editorial header lockup instead of a pill, and a bold tape across the
-    // mosaic. Cyber Monday adds a navy pixel dissolve over the photos.
+    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js)
+    // with an editorial header lockup instead of a pill. Cyber Monday adds a
+    // navy pixel dissolve over the photos.
     campaignFields: ['images'],
     campaigns: {
       'black-friday': {
         layout: 'mosaic',
-        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
-        decor: {
-          tape: { bg: '#B6D8E5', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
-        },
+        badge: { line: true, fill: false, fg: '#B6D8E5', extraFg: '#FFFFFF' },
       },
       'cyber-monday': {
         layout: 'mosaic',
-        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
+        badge: { line: true, fill: false, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          tape: { bg: '#FFFFFF', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
           seam: { type: 'pixels', color: '#0F2A47', opacity: 1, cell: 0.05 },
         },
       },
@@ -52,23 +48,19 @@ const BRANDS = {
     titleWeight: 500,
     titleCase: 'none',
     // Seasonal skins (src/campaigns.js). Both keep the Decorabaño navy + light
-    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js):
-    // an editorial header lockup instead of a pill, and a bold tape across the
-    // mosaic. Cyber Monday adds a navy pixel dissolve over the photos.
+    // blue and switch to the multiproduct mosaic (src/templates/mosaic.js)
+    // with an editorial header lockup instead of a pill. Cyber Monday adds a
+    // navy pixel dissolve over the photos.
     campaignFields: ['images'],
     campaigns: {
       'black-friday': {
         layout: 'mosaic',
-        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
-        decor: {
-          tape: { bg: '#B6D8E5', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
-        },
+        badge: { line: true, fill: false, fg: '#B6D8E5', extraFg: '#FFFFFF' },
       },
       'cyber-monday': {
         layout: 'mosaic',
-        badge: { line: true, fg: '#B6D8E5', extraFg: '#FFFFFF' },
+        badge: { line: true, fill: false, fg: '#B6D8E5', extraFg: '#FFFFFF' },
         decor: {
-          tape: { bg: '#FFFFFF', fg: '#0F2A47', thick: 0.11, reach: 0.34 },
           seam: { type: 'pixels', color: '#0F2A47', opacity: 1, cell: 0.05 },
         },
       },
@@ -92,8 +84,8 @@ const BRANDS = {
     titleCase: 'uppercase',
     // Seasonal skins (src/campaigns.js): retail promo layout
     // (src/templates/commercial.js) — white headline with *highlighted* words,
-    // solid label tab, optional price card, warning tape. Black Friday in
-    // black + brand orange, Cyber Monday in navy + cyan.
+    // solid label tab, optional price card with a round discount label.
+    // Black Friday in brand orange; Cyber Monday in navy + cyan with tape.
     campaignFields: ['product'],
     campaigns: {
       'black-friday': {
@@ -101,8 +93,7 @@ const BRANDS = {
         colors: { accent: '#F26B2A', onAccent: '#FFFFFF' },
         badge: { bg: '#F26B2A', fg: '#FFFFFF' },
         decor: {
-          tape: { bg: '#0A0A0A', fg: '#F26B2A' },
-          sticker: { shape: 'tag', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -14 },
+          sticker: { shape: 'circle', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -8 },
         },
       },
       'cyber-monday': {
@@ -131,8 +122,8 @@ const BRANDS = {
     titleCase: 'uppercase',
     // Seasonal skins (src/campaigns.js): retail promo layout
     // (src/templates/commercial.js) — white headline with *highlighted* words,
-    // solid label tab, optional price card, warning tape. Black Friday in
-    // black + brand orange, Cyber Monday in navy + cyan.
+    // solid label tab, optional price card with a round discount label.
+    // Black Friday in brand orange; Cyber Monday in navy + cyan with tape.
     campaignFields: ['product'],
     campaigns: {
       'black-friday': {
@@ -140,8 +131,7 @@ const BRANDS = {
         colors: { accent: '#F26B2A', onAccent: '#FFFFFF' },
         badge: { bg: '#F26B2A', fg: '#FFFFFF' },
         decor: {
-          tape: { bg: '#0A0A0A', fg: '#F26B2A' },
-          sticker: { shape: 'tag', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -14 },
+          sticker: { shape: 'circle', bg: '#F26B2A', fg: '#FFFFFF', ring: false, rotate: -8 },
         },
       },
       'cyber-monday': {
@@ -192,29 +182,22 @@ const BRANDS = {
     titleWeight: 400,
     titleCase: 'none',
     // Seasonal skins (src/campaigns.js): luminous lifestyle layout
-    // (src/templates/inspire.js) — bright photo, short serif stack at the top
-    // in warm white, a small seal bottom-right, optional vertical legal copy.
+    // (src/templates/inspire.js) — bright photo, short Suisse stack at the top
+    // in soft yellow, yellow pill CTA, optional vertical legal copy. No seal:
+    // the discount lives in the campaign line.
     campaignFields: ['legal'],
     campaigns: {
       'black-friday': {
         layout: 'inspire',
-        badge: { fg: '#FFFDF6', rule: true },
-        decor: {
-          sticker: {
-            shape: 'circle', bg: '#FBEC80', fg: '#1B1B1B', ringFg: '#1B1B1B',
-            font: '"Suisse Intl", Arial, sans-serif', numFont: 'Ogg, Georgia, serif', weight: 400,
-          },
-        },
+        colors: { inspireInk: '#F7EAA8', inspireCta: '#F7EAA8', inspireCtaText: '#2C403F' },
+        badge: { fg: '#F7EAA8', rule: true },
       },
       'cyber-monday': {
         layout: 'inspire',
+        colors: { inspireInk: '#F7EAA8', inspireCta: '#F7EAA8', inspireCtaText: '#2C403F' },
         badge: { bg: 'rgba(166,185,165,0.92)', fg: '#2C403F' },
         decor: {
           pattern: { type: 'arches', color: '#FFFDF6', opacity: 0.45, corners: ['bl'], radius: 0.36 },
-          sticker: {
-            shape: 'scallop', bg: '#A6B9A5', fg: '#2C403F',
-            font: '"Suisse Intl", Arial, sans-serif', numFont: 'Ogg, Georgia, serif', weight: 400,
-          },
         },
       },
     },

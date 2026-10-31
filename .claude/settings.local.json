@@ -29,7 +29,10 @@
       "Bash(rm -rf /tmp/d /tmp/s /tmp/s2 /tmp/t)",
       "Bash(rm -f /tmp/test-banner.jpg /tmp/deco.zip)",
       "Bash(rm -rf /tmp/d)",
-      "Bash(mkdir -p /Users/carlosjavierrodriguezchamizo/Desktop/DEV/banners/public/patterns *)"
+      "Bash(mkdir -p /Users/carlosjavierrodriguezchamizo/Desktop/DEV/banners/public/patterns *)",
+      "Bash(npm start *)",
+      "Bash(node -e ' *)",
+      "Bash(node /private/tmp/claude-501/-Users-carlosjavierrodriguezchamizo-Desktop-DEV-banners/6fee6e1e-87ed-4fb9-8603-0e5e6ef48f32/scratchpad/render-check.js /private/tmp/claude-501/-Users-carlosjavierrodriguezchamizo-Desktop-DEV-banners/6fee6e1e-87ed-4fb9-8603-0e5e6ef48f32/scratchpad)"
     ]
   }
 }

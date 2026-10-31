@@ -24,10 +24,10 @@ const LAYOUTS = {
 };
 
 function renderBanner({
-  brandId, campaign, discount, copy, subcopy, cta, imageUrl, images, product, legal,
+  brandId, campaign, discount, campaignLabel, copy, subcopy, cta, imageUrl, images, product, legal,
   focal, veil, zoom, format, baseUrl,
 }) {
-  const brand = applyCampaign(getBrand(brandId), campaign, discount);
+  const brand = applyCampaign(getBrand(brandId), campaign, discount, campaignLabel);
   const template = (brand.campaign && LAYOUTS[brand.layout]) || STYLES[brand.style];
   if (!template) throw new Error(`Unknown style: ${brand.style}`);
   const part = format?.part || 'full';

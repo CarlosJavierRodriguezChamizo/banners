@@ -75,8 +75,11 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     portrait: { axis: 'column', cross: '42%', dim: 'h' },
   }[layout];
 
-  const ctaRem    = 3.4;
+  // The text-only website piece sits beside a separate photo: generous left
+  // margin, the block kept to the left half, and everything a size up.
+  const ctaRem    = textOnly ? 4.2 : 3.4;
   const padRem    = layout === 'portrait' ? 4 : 5;
+  const padLeftRem = textOnly ? 9 : padRem;
   // Extra top padding for Instagram Story so the IG avatar doesn't overlap.
   const padTopRem = isInstagramStory ? 10 : padRem;
   const ctaGapRem = layout === 'portrait' ? 3.5 : 4;
@@ -95,7 +98,9 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   // spans the full canvas, so let the text occupy at most 80% of that width.
   // Wide layouts already have a narrow panel — full width is fine there.
   const textWidthFraction = layout === 'wide' ? 1.0 : 0.80;
-  const titleContainerWidth = availableTextWidth * textWidthFraction;
+  const titleContainerWidth = textOnly
+    ? w * 0.5 - padLeftRem * remPx
+    : availableTextWidth * textWidthFraction;
   // Continuous text with optional explicit \n preserved as hard breaks.
   const titleText = normalizeCopyKeepingBreaks(copy);
   const subText = normalizeCopyKeepingBreaks(subcopy);
@@ -106,9 +111,11 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
   const subLineH = 1.35;
   // The subtitle is sized *relative to the title* so the two always keep a
   // readable hierarchy — a fixed rem size made short titles tower over it.
-  const subRatio  = 0.77;          // title : subtitle ≈ 1.3 : 1
+  // The text-only website piece runs a large title, so its subtitle steps
+  // down further to keep the pair from reading as two headlines.
+  const subRatio  = textOnly ? 0.62 : 0.77; // title : subtitle ≈ 1.3 : 1
   const subMinPx  = 2.8 * remPx;
-  const subMaxPx  = 5.6 * remPx;
+  const subMaxPx  = (textOnly ? 4.4 : 5.6) * remPx;
   // Gap grows with the title so the two never crowd each other.
   const gapFor    = (px) => Math.max(1.2 * remPx, px * 0.42);
   const subWidthPx = titleContainerWidth * 0.9; // .sub max-width: 90%
@@ -142,23 +149,23 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
     fontFamily: brand.fontFamily,
     fontWeight: 700,
     W: titleContainerWidth,
-    maxPx: Math.max(14, Math.min(remPx * 2.8, 34)),
+    maxPx: Math.max(14, Math.min(remPx * (textOnly ? 3.4 : 2.8), textOnly ? 40 : 34)),
     charRatio: 0.66,
     tracking: 0.14,
     radius: 999,
   });
-  const badgeGapPx = badge.px * 1.2;
-  // The rendered gap is max(badgeGap, the text-block gap), and the latter grows
-  // with the title — reserve against the largest title size to stay safe.
-  const badgeBlockPx = badge.heightPx
-    ? badge.heightPx + Math.max(badgeGapPx, gapFor(layout === 'wide' ? 54 : 68))
-    : 0;
+  // Close to the title (kicker), even if the text-block gap is larger: the
+  // margin below goes negative to pull the title up.
+  const badgeGapPx = badge.px * 0.9;
+  const badgeBlockPx = badge.heightPx ? badge.heightPx + badgeGapPx : 0;
   const availableTextHeight = panelHeightPx - padTopPx - padBotPx - ctaBlockPx - badgeBlockPx;
 
   // Largest title size at which title + subtitle together still fit. Both are
   // measured with the real wrap model, so the pair is fitted as one block
   // instead of the title hogging space against a fixed reserve.
-  const maxTitlePx = layout === 'wide' ? 54 : layout === 'square' ? 68 : 64;
+  const maxTitlePx = textOnly
+    ? Math.round(remPx * 7.5)
+    : layout === 'wide' ? 54 : layout === 'square' ? 68 : 64;
   const minTitlePx = 24;
   const longestTitleWord = longestWordLen(titleText);
   // The floor never overtakes the title: on very long copy the title shrinks,
@@ -247,7 +254,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         ? 'width: 100%; height: 100%;'
         : (panelStyles.axis === 'row' ? `width: ${panelStyles.cross};` : `height: ${panelStyles.cross};`)}
       background: ${colors.panel};
-      padding: ${padTopRem}rem ${padRem}rem ${padRem}rem ${padRem}rem;
+      padding: ${padTopRem}rem ${padRem}rem ${padRem}rem ${padLeftRem}rem;
       display: flex;
       flex-direction: column;
       justify-content: ${panelJustify};
@@ -261,7 +268,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       display: flex;
       flex-direction: column;
       gap: ${blockGapPx}px;
-      max-width: ${textWidthFraction * 100}%;
+      max-width: ${textOnly ? `${Math.round(titleContainerWidth)}px` : `${textWidthFraction * 100}%`};
     }
     .title {
       font-family: ${brand.fontFamily};
@@ -275,7 +282,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
       overflow-wrap: normal;
       word-break: normal;
     }
-    .campaign { margin-bottom: ${Math.max(0, badgeGapPx - blockGapPx)}px; }
+    .campaign { margin-bottom: ${badgeGapPx - blockGapPx}px; }
     .sub {
       font-size: ${subPx}px;
       font-weight: 400;
@@ -327,7 +334,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         ${panelDecorHtml}
         <div class="text-block">
           ${badge.html}
-          <h1 class="title">${copyToHtml(titleText)}</h1>
+          ${titleText ? `<h1 class="title">${copyToHtml(titleText)}</h1>` : ''}
           ${subHtml}
         </div>
         ${showCta && cta ? `<a class="cta">${escapeHtml(cta)}</a>` : ''}
@@ -339,7 +346,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
         ${panelDecorHtml}
         <div class="text-block">
           ${badge.html}
-          <h1 class="title">${copyToHtml(titleText)}</h1>
+          ${titleText ? `<h1 class="title">${copyToHtml(titleText)}</h1>` : ''}
           ${subHtml}
         </div>
         ${showCta && cta ? `<a class="cta">${escapeHtml(cta)}</a>` : ''}

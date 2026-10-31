@@ -274,7 +274,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
           ${logoHtml}
           <div class="text-block">
             ${badge.html}
-            <h1 class="title">${copyToHtml(titleText)}</h1>
+            ${titleText ? `<h1 class="title">${copyToHtml(titleText)}</h1>` : ''}
             ${subHtml}
           </div>
           ${ctaHtml}
@@ -340,7 +340,7 @@ function render({ brand, copy, subcopy, cta, imageUrl, focal, veil, zoom, format
           <div class="bottom">
             <div class="text-block">
               ${badge.html}
-              <h1 class="title">${copyToHtml(titleText)}</h1>
+              ${titleText ? `<h1 class="title">${copyToHtml(titleText)}</h1>` : ''}
               ${subHtml}
             </div>
             ${ctaHtml}
